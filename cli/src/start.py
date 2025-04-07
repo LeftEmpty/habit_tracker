@@ -1,6 +1,6 @@
-from sqlite_rx.client import SQLiteClient
+from sqlite_rx.client import SQLiteClient # type: ignore
 
-def user_input_loop():
+def user_input_loop() -> None:
     while True:
         # Display a menu or prompt
         print("\nOptions:")

@@ -1,5 +1,4 @@
 from cli.src.start import start as start_cli
-from db.src.start import start as start_db
 import subprocess
 import atexit
 
