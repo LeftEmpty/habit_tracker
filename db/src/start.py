@@ -24,6 +24,7 @@ def start():
         client.execute(habit) # type: ignore
         client.execute(habit_list) # type: ignore
         client.execute(completions) # type: ignore
+    
     server.join() # type: ignore
 
 

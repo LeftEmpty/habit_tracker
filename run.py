@@ -8,7 +8,7 @@ def main() -> None:
     with open("db_handler.log", "w") as log_file:
         # Run the script as a subprocess
         subprocess.Popen(
-            ["python3", "db/src/start.py"],  
+            ["python3", "-u", "db/src/start.py"],  
             stdout=log_file,                
             stderr=subprocess.STDOUT
         )
