@@ -2,5 +2,4 @@ db.sqlite
 db.sqlite-shm
 db.sqlite-wal
 db_handler.log
-cli/src/__pycache__/start.cpython-313.pyc
-db/src/__pycache__/start.cpython-313.pyc
+__pycache__/
