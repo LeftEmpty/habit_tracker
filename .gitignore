@@ -1,0 +1,5 @@
+db.sqlite
+db.sqlite-shm
+db.sqlite-wal
+db_handler.log
+__pycache__/
