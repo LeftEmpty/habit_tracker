@@ -1,11 +1,12 @@
 from sqlite_rx.client import SQLiteClient # type: ignore
+from .sql_controller import create_habit, create_user
 
-def user_input_loop() -> None:
+def user_input_loop(sql_client: SQLiteClient) -> None:
     while True:
         # Display a menu or prompt
         print("\nOptions:")
-        print("1. Option 1")
-        print("2. Option 2")
+        print("1. Create Habit")
+        print("2. Create User")
         print("3. Exit")
         
         # Get user input
@@ -14,10 +15,21 @@ def user_input_loop() -> None:
         # Handle user input
         if choice == "1":
             print("You selected Option 1.")
-            # Add logic for Option 1
+            create_habit(
+                sql_client=sql_client,  # Replace with actual SQLite client instance
+                habit_name="Exercise",
+                habit_description="Daily workout",
+                frequency=1,
+                timeframe="daily"
+            )
         elif choice == "2":
             print("You selected Option 2.")
-            # Add logic for Option 2
+            create_user(
+                sql_client=sql_client,
+                display_name="stegan",  # Replace with actual SQLite client instance
+                username="user1",
+                password="password123"
+            )
         elif choice == "3":
             print("Exiting...")
             break  # Exit the loop
@@ -30,7 +42,7 @@ def start() -> None:
     with client:
         # Perform operations with the client
         print("Connected to SQLite server.")
-        user_input_loop()
+        user_input_loop(client)
         # Example: Execute a query
         # result = client.execute("SELECT * FROM your_table")
         # print(result)
