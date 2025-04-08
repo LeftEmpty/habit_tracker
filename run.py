@@ -1,13 +1,24 @@
 from cli.src.start import start as start_cli
 import subprocess
+import atexit
 
 def main() -> None:
 
-    subprocess.Popen(["python3", "-m", "db.src.start"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # Start the SQLite server in a separate process with logging
+    with open("db_handler.log", "w") as log_file:
+        # Run the script as a subprocess
+        subprocess.Popen(
+            ["python3", "-u", "db/src/start.py"],  
+            stdout=log_file,                
+            stderr=subprocess.STDOUT
+        )
+    
+    atexit.register(
+        lambda: subprocess.call(["pkill", "-f", "db/src/start.py"])
+    )
 
-    #cli
+
     start_cli()
-
 
 
 if __name__ == "__main__":
