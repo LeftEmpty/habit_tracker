@@ -12,6 +12,9 @@ class PanelBase(FrameBase):
         super().__init__(root_reference)  
         self.root_ref = root_reference
     
-    @abstractmethod
-    def setup_panel()->None:
+    def setup_frame(self)->None:
+        self.setup_panel()
+    
+    @abstractmethod    
+    def setup_panel(self)->None:
         pass

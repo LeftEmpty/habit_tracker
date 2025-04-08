@@ -1,18 +1,20 @@
 import tkinter as tk
 from tkinter import ttk
+from typing import List
 
 from frontend.src.panels.panel import PanelBase
 from frontend.src.screens.screen import ScreenBase
 from frontend.src.frame import FrameBase
 
-#from frontend.src.panels.dashboard import Dashboard
+from frontend.src.screens.login_screen import LoginScreen
+from frontend.src.screens.main_screen import MainScreen
 #from frontend.src.screens.login_screen import LoginPanel
 
 
 class GUI:
     """ Basic GUI class, main root window, has instance of all panels,
-    gives panels a reference to the main root window to let them add their widgets
-    only calls util/functionality classes but does not do anything else itself
+    manages screens & panels and serves as root for them 
+    only calls util/functionality classes but does not touch data itself
     """
     def __init__(self)->None:
         print("[GUI] __init__ called")
@@ -20,52 +22,45 @@ class GUI:
         self.root.title("HabitTracker")
         self.root.geometry("720x480")
         self.root.config(bg='#000', padx=12, pady=12)
-                
+        
+        # Initialize and store screens
+        self.login_screen: LoginScreen = LoginScreen(self.root)  # Pass root to screen
+        self.main_screen: MainScreen = MainScreen(self.root)  # Uncomment this line
+        
+        # List to store screen references
+        self.screens: List[ScreenBase] = [self.login_screen, self.main_screen]
+
+        # Start the GUI application
         self.on_startup()
         
         # Launch the app
         self.root.mainloop()
 
-    
 
     def on_startup(self)->bool:
         """ Initializes the GUI panel system
-
+        -> check if we're logged in, open appropriate screen
+        
         @return bool: returns true on successful startup
         """
-        if (not self.check_user_logged_in()):
-            # show login screen
-            pass
+        if not self.check_user_logged_in():
+            # Show login screen if user is not logged in
+            self.open_screen(self.login_screen)
         else:
-            # show main screen
-            pass
-        self.open_panel(self.p_dashboard)
+            # Show main screen if user is logged in
+            self.open_screen(self.main_screen)
+            
         return True
 
-    def open_screen(screen:FrameBase)->None:
+    def open_screen(self, screen:FrameBase)->None:
         """
         """
-        # collapse all frames
+        # Collapse all frames
+        for s in self.screens:
+            s.pack_forget()
+        # Show the selected screen
+        screen.pack(expand=True, fill="both")
         
-        # open new one
-        
-
-
-    def open_panel(panel:PanelBase)->None:
-        """Panels are somewhat connected in that they are contained in the same notebook on the main screen"""
-        panel.display_panel()
-        
-
-    def check_user_logged_in()->bool:
+    def check_user_logged_in(self)->bool:
         # @TODO out of scope but should be added in full release
-        return False
-
-    # create and place UI elements
-    def create_basic_layout(self):
-        # main label
-        self.label = tk.Label(self.root, text="Test Btn", font=("Roboto", 14))
-        self.label.pack(pady=20)
-
-        # button 2 - take screenshots
-        self.button_screenshot = tk.Button(self.root, text="Take screenshot", command=self.capture_screenshot)
-        self.button_screenshot.pack(pady=5)
+        return True

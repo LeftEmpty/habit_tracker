@@ -2,12 +2,11 @@ import tkinter as tk
 from tkinter import ttk
 from frontend.src.screens.screen import ScreenBase
 
-class LoginPanel(ScreenBase):
-    def __init__(self) -> None:
-        super().__init__()
-        self.setup_panel()
+class LoginScreen(ScreenBase):
+    def __init__(self, root_reference) -> None:
+        super().__init__(root_reference)
 
-    def setup_panel(self) -> None:
+    def setup_screen(self) -> None:
         # Widgets
         login_label = tk.Label(self, text="Login", bg='#000000', fg="#FFFFFF", font=("Roboto", 32))
         username_label = tk.Label(self, text="Username", bg='#000000', fg="#FFFFFF", font=("Roboto", 16))
@@ -24,3 +23,5 @@ class LoginPanel(ScreenBase):
         password_entry.grid(row=4, column=0, columnspan=2)
         login_button.grid(row=6, column=0, columnspan=2)
         
+    def try_login(self)->bool:
+        return False

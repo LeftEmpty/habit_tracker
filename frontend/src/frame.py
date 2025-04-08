@@ -8,17 +8,14 @@ class FrameBase(ttk.Frame, ABC):
     Main frames are subcategorized into panels & screen 
     
     Screens are completely seperate from each other, e.g.: login/main screens
-        Panels are somewhat connected in that they are contained in the same notebook on the main screen
+    Panels are somewhat connected in that they are contained in the same notebook on the main screen
     """
-    def __init__(self)->None:
-        # Make this object a Frame
-        super().__init__()
-        
-    def __init__(self, root_reference:ttk.Notebook)->None:
+    def __init__(self, root_reference) -> None:
         # Make this object a Frame
         super().__init__(root_reference)
+        self.root_ref = root_reference
+        self.setup_frame()
         
     @abstractmethod
-    def setup_frame()->None:
-        """override this function in child class"""
+    def setup_frame(self)->None:
         pass
