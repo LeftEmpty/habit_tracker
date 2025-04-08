@@ -1,12 +1,20 @@
+import os
 from sqlite_rx.client import SQLiteClient # type: ignore
-from .sql_controller import create_habit, create_user
+from .login_handler import create_user, login_user
+#globals
+clear = lambda: os.system('cls' if os.name == 'nt' else 'clear')
 
 def user_input_loop(sql_client: SQLiteClient) -> None:
+
+    login_user(sql_client)
+
+    #Habit management
     while True:
+
         # Display a menu or prompt
         print("\nOptions:")
         print("1. Create Habit")
-        print("2. Create User")
+        print("2. Logout")
         print("3. Exit")
         
         # Get user input
@@ -23,13 +31,8 @@ def user_input_loop(sql_client: SQLiteClient) -> None:
                 timeframe="daily"
             )
         elif choice == "2":
-            print("You selected Option 2.")
-            create_user(
-                sql_client=sql_client,
-                display_name="stegan",  # Replace with actual SQLite client instance
-                username="user1",
-                password="password123"
-            )
+            pass
+
         elif choice == "3":
             print("Exiting...")
             break  # Exit the loop
@@ -40,6 +43,7 @@ def user_input_loop(sql_client: SQLiteClient) -> None:
 def start() -> None:
     client = SQLiteClient(connect_address="tcp://127.0.0.1:5000")
     with client:
+
         # Perform operations with the client
         print("Connected to SQLite server.")
         user_input_loop(client)
