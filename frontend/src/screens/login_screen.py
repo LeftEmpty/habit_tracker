@@ -1,6 +1,8 @@
 import tkinter as tk
-from tkinter import ttk
+import hashlib
+from util.src.endpoint_api import login_user
 from frontend.src.screens.screen import ScreenBase
+
 
 class LoginScreen(ScreenBase):
     def __init__(self, root_reference) -> None:
@@ -18,10 +20,16 @@ class LoginScreen(ScreenBase):
         # Layout
         login_label.grid(row=0, column=0, columnspan=2)
         username_label.grid(row=1, column=0)
-        username_entry.grid(row=2, column=0, columnspan=2)
+        self.usr_entry = username_entry.grid(row=2, column=0, columnspan=2)
         password_label.grid(row=3, column=0)
-        password_entry.grid(row=4, column=0, columnspan=2)
-        login_button.grid(row=6, column=0, columnspan=2)
+        self.pw_entry = password_entry.grid(row=4, column=0, columnspan=2)
+        login_button.grid(row=6, column=0, columnspan=2, command=self.try_login)
         
     def try_login(self)->bool:
-        return False
+        try_usr = self.usr_entry.get()
+        try_pw = self.pw_entry.get()
+        hashlib.sha256(try_usr.encode()).hexdigest(), hashlib.sha256(try_pw.encode()).hexdigest()
+        
+        login_user(try_usr, try_pw)
+        
+        return True
