@@ -1,4 +1,4 @@
-from tkinter import Tk
+import tkinter as tk
 from frontend.src.gui import GUI
 from util.src.action_handler import ActionHandler
 from db.src.database import Database
@@ -26,7 +26,7 @@ def main() -> None:
 
     db:Database = Database(0)
     action_handler = ActionHandler(db)
-    root = Tk()
+    root = tk.Tk() 
     gui = GUI(root, action_handler)
     root.mainloop()
 
