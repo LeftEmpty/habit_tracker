@@ -21,15 +21,22 @@ def main() -> None:
     atexit.register(
         lambda: subprocess.call(["pkill", "-f", "db/src/start.py"])
     )
+    atexit.register(cleanup)
 
     # start_cli()
 
     db:Database = Database(0)
     action_handler = ActionHandler(db)
-    root = tk.Tk() 
-    gui = GUI(root, action_handler)
+    root = tk.Tk()
+    gui = GUI(root)
     root.mainloop()
 
+def cleanup():
+    #server.terminate()
+    #server.join()
+    pass
 
 if __name__ == "__main__":
     main()
+
+
