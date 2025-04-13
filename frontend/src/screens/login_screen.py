@@ -1,6 +1,6 @@
 import tkinter as tk
 import hashlib
-from util.src.endpoint_api import login_user
+from util.src.action_handler import login_user
 from frontend.src.screens.screen import ScreenBase
 
 
@@ -24,7 +24,7 @@ class LoginScreen(ScreenBase):
         password_label.grid(row=3, column=0)
         self.pw_entry = password_entry.grid(row=4, column=0, columnspan=2)
         login_button.grid(row=6, column=0, columnspan=2, command=self.try_login)
-        
+
     def try_login(self)->bool:
         try_usr = self.usr_entry.get()
         try_pw = self.pw_entry.get()

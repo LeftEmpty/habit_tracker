@@ -5,4 +5,4 @@ habit: str = """
         description TEXT,
         frequency INTEGER NOT NULL,
         timeframe TEXT NOT NULL
-        )"""
+    )"""

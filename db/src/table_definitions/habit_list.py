@@ -7,6 +7,5 @@ habit_list: str = """
         user_id INTEGER NOT NULL,
         habit_id INTEGER NOT NULL,
         FOREIGN KEY(user_id) REFERENCES user(user_id),
-        FOREIGN KEY(habit_id) REFERENCES habit(habit_id)        
-    )
-"""
+        FOREIGN KEY(habit_id) REFERENCES habit(habit_id)
+    )"""

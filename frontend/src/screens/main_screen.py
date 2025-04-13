@@ -1,9 +1,8 @@
 import tkinter as tk
-from tkinter import ttk
 from frontend.src.screens.screen import ScreenBase
 
 class MainScreen(ScreenBase):
-    def __init__(self, root_reference) -> None:
+    def __init__(self, root_reference:tk.Tk) -> None:
         super().__init__(root_reference)
 
     def setup_screen(self) -> None:

@@ -5,5 +5,4 @@ completions: str = """
         habit_id INTEGER NOT NULL,
         FOREIGN KEY(user_id) REFERENCES user(user_id),
         FOREIGN KEY(habit_id) REFERENCES habit(habit_id)
-    )
-"""
+    )"""
