@@ -2,10 +2,10 @@
 #from cli.src.sql_controller import db_create_user, db_login_user
 from sqlite_rx.client import SQLiteClient # type: ignore
 from db.src.database import Database
-from util.src.data_classes.data_classes import Habit
-from util.src.data_classes.data_classes import User
+from util.src.data_classes import Habit
+from util.src.data_classes import User
 from typing import Optional,Any # we use this cause pylance doesn't know sqlite classes
-
+import hashlib
 
 class ActionHandler:
     """ActionHandler Object that handles GUI logic, a reference is given to the GUI object.
@@ -14,10 +14,10 @@ class ActionHandler:
         self.db = db
         pass
 
-    def try_create_user(self, usr:str, pw:str) -> bool:
+    def try_create_user(self, e_mail:str, usr:str, pw:str) -> bool:
         """gets hashed user data and creates user with it if it doesn't already exist"""
 
-        user_id:int | None = self.db.db_create_user(usr, pw)
+        # user_id:int | None = self.db.db_create_user(e_mail, usr, pw)
 
         # user_id: int | None = db_create_user(
         #     sql_client=sql_client,
