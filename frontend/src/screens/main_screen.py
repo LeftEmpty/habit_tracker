@@ -6,11 +6,11 @@ class MainScreen(ScreenBase):
         super().__init__(root_reference)
 
     def setup_screen(self) -> None:
-        
+
         print("opened main_screen")
         login_label = tk.Label(self, text="Dashboard", bg='#000000', fg="#FFFFFF", font=("Roboto", 32))
         login_label.grid(row=0, column=0, columnspan=2)
-                
+
         # Notebook tab view
         #notebook = ttk.Notebook(self.root)
 
@@ -22,4 +22,3 @@ class MainScreen(ScreenBase):
         #notebook.add(self.p_login, text="Login")
         #notebook.add(self.p_dashboard, text="Dashboard")
         #notebook.pack(expand=True, fill="both")
-        

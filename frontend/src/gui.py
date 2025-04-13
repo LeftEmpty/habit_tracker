@@ -1,8 +1,6 @@
 import tkinter as tk
 from typing import Dict
 
-from util.src.action_handler import ActionHandler
-
 #from frontend.src.frame import FrameBase
 #from frontend.src.panels.panel import PanelBase
 from frontend.src.screens.screen import ScreenBase
@@ -17,7 +15,7 @@ class GUI:
     manages screens & panels and serves as root for them
     only calls util/functionality classes but does not touch data itself
     """
-    def __init__(self, root:tk.Tk, action_handler:ActionHandler)->None:
+    def __init__(self, root:tk.Tk)->None:
         print("[GUI] __init__ called")
         root.title("HabitTracker")
         root.geometry("720x480")
@@ -63,4 +61,4 @@ class GUI:
 
     def check_user_logged_in(self)->bool:
         # @TODO out of scope but should be added in full release
-        return True
+        return False
