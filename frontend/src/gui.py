@@ -20,6 +20,7 @@ class GUI:
         root.title("HabitTracker")
         root.geometry("720x480")
         root.config(bg='#000', padx=12, pady=12)
+        self.root_ref = root
 
         # Initialize and store screen references in Dictionary
         self.screens: Dict[str, ScreenBase] = {
@@ -58,6 +59,7 @@ class GUI:
              self.current_screen.pack_forget()
         # Show the selected screen
         screen.pack(expand=True, fill="both")
+        screen.place(in_=self.root_ref, anchor="c", relx=.5, rely=.5)
 
     def check_user_logged_in(self)->bool:
         # @TODO out of scope but should be added in full release
