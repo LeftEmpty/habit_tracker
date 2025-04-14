@@ -16,7 +16,7 @@ class GUI:
     only calls util/functionality classes but does not touch data itself
     """
     def __init__(self, root:tk.Tk)->None:
-        print("[GUI] __init__ called")
+        print("[GUI]...")
         root.title("HabitTracker")
         root.geometry("720x480")
         root.config(bg='#000', padx=12, pady=12)
@@ -59,7 +59,7 @@ class GUI:
              self.current_screen.pack_forget()
         # Show the selected screen
         screen.pack(expand=True, fill="both")
-        screen.place(in_=self.root_ref, anchor="c", relx=.5, rely=.5)
+        screen.place(in_=self.root_ref, anchor="center", relx=.5, rely=.5)
 
     def check_user_logged_in(self)->bool:
         # @TODO out of scope but should be added in full release

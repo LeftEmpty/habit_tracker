@@ -26,6 +26,7 @@ class Database:
         """
 
         # debug / info
+        print("[DB]...")
         print("initializing database..")
 
         # @TODO establish connection
@@ -68,13 +69,11 @@ class Database:
         if len(items) == 0:
             return None
 
-
         # @TODO convert the result into a useable user dataclass
         print(result.get("items"))
         #user = User()
         #return user
         return None
-
 
     def is_valid_user_id(self, user_id:int) -> bool:
         """returns true/false whether a user exists in the db with the given id"""

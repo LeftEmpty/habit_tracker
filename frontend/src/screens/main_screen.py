@@ -6,8 +6,9 @@ class MainScreen(ScreenBase):
         super().__init__(root_reference)
 
     def setup_screen(self) -> None:
+        # debug / info
+        print("main screen setup")
 
-        print("opened main_screen")
         login_label = tk.Label(self, text="Dashboard", bg='#000000', fg="#FFFFFF", font=("Roboto", 32))
         login_label.grid(row=0, column=0, columnspan=2)
 
