@@ -1,23 +1,31 @@
 import tkinter as tk
-from tkinter import ttk
 import hashlib
 from enum import Enum
-from util.src.helper import validate_input
 from frontend.src.screens.screen import ScreenBase
-
+from util.src.validators import contains_empty_input, contains_naughty_stuff, validate_email, validate_username, validate_password
 
 class PanelState(Enum):
     LOGIN = "Login"
     REGISTER = "Register"
 
+class FailureResponse(Enum):
+    DEFAULT = "Couldn't process that action."
+    EMPTY_FIELDS = "Please fill in all required fields."
+    INVALID_EMAIL = "Invalid e-mail."
+    INVALID_USR = "Invalid username."
+    INVALID_PW = "Invalid password."
+    MISMATCH_PW = "The passwords don't match"
+    EMAIL_EXISTS = "Email already in use."
+    USR_EXISTS = "Username taken."
+    NAUGHTY = "Dont do that, you know what you did =)"
+
 
 class LoginScreen(ScreenBase):
+    #* **************************************** overwriting base class functionality ****************************************
     def __init__(self, root_reference:tk.Tk) -> None:
         self.cur_panel = PanelState.LOGIN
         super().__init__(root_reference) # type: ignore
 
-
-    #* **************************************** overwriting base class functionality ****************************************
     def setup_screen(self) -> None:
         """setup_screen is called on init (ScreenBase)
         Create widgets and init layout, then call """
@@ -36,6 +44,7 @@ class LoginScreen(ScreenBase):
         self.password2_entry = tk.Entry(self, show="*")
         self.login_button = tk.Button(self, text="Login", fg='#fff', bg='#000', borderwidth=2, relief="flat", command=self.try_login)
         self.register_button = tk.Button(self, text="Register", fg='#fff', bg='#000', borderwidth=2, relief="flat", command=self.try_register)
+        self.failmsg_label = tk.Label(self, text="", bg='#000', fg="red", font=("Roboto", 9, "italic"), anchor="center")
 
         # Set Layout
         self.title_label.grid(row=0, column=0, columnspan=2, pady=8, padx=8, sticky="w")
@@ -48,7 +57,8 @@ class LoginScreen(ScreenBase):
         self.password2_label.grid(row=4, column=0, padx=8, sticky="w")
         self.password2_entry.grid(row=4, column=1, columnspan=2)
         self.login_button.grid(row=5, column=0, pady=12)
-        self.register_button.grid(row=5, column=2, pady=12)
+        self.register_button.grid(row=5, column=2, pady=18)
+        self.failmsg_label.grid(row=6, column=0, columnspan=3, pady=8)
 
         # Updatee Layout to reflect current panel state (init LOGIN)
         self.update_screen(self.cur_panel)
@@ -56,12 +66,13 @@ class LoginScreen(ScreenBase):
         # debug / info
         print("login screen setup completed")
 
-    #* **************************************** login screen specific functionality ****************************************
+
+    #* **************************************** login / register functionality ****************************************
     def try_login(self) -> None:
-        """"""
-        # check we're on the right panel, update if necessary
+        """Swap panel OR Check input, then pass validated and hashed input to action handler
+        On faiklure: give failure response feebback"""
+        # check we're on the right panel, remove failure msg, if necessary update and return
         if self.cur_panel == PanelState.REGISTER:
-            # update screen
             self.update_screen(PanelState.LOGIN)
             return
 
@@ -69,18 +80,10 @@ class LoginScreen(ScreenBase):
         try_usr:str = str(self.username_entry.get())
         try_pw:str = str(self.password_entry.get())
 
-        print(f"trying login with usr: {try_usr}, pw: {try_pw}")
-
         # validate input
-        # (catch funny people)
-        funny_checks:list = ["DROP_TABLE", "SELECT * FROM", "WHERE 1==1"]
-        for fc in funny_checks:
-            if fc in try_usr or fc in try_pw:
-                print("dont do that, you know what you did =)")
-                return
-        if not try_usr or not try_pw:
-            print("Username or password is empty.")
+        if not self.validate_input_login(try_usr, try_pw):
             return
+        print(f"trying login with valid input, usr: {try_usr}, pw: {try_pw}")
 
         # hash input #? should i hash this here or in the action handler?
         hashed_usr = hashlib.sha256(try_usr.encode()).hexdigest()
@@ -88,14 +91,15 @@ class LoginScreen(ScreenBase):
 
         # query db via action handler
         # @TODO call action handler login function
-        #if (action_handler.login()):
+        #if not action_handler.login():
+            # handle fail response
 
 
     def try_register(self) -> None:
-        """"""
-        # check we're on the right panel, update if necessary
+        """Swap panel OR Check input, then pass validated and hashed input to action handler
+        On faiklure: give failure response feebback."""
+        # check we're on the right panel, if necessary update and return
         if self.cur_panel == PanelState.LOGIN:
-            # update screen
             self.update_screen(PanelState.REGISTER)
             return
 
@@ -105,27 +109,63 @@ class LoginScreen(ScreenBase):
         try_pw:str = str(self.password_entry.get())
         try_pw2:str = str(self.password2_entry.get())
 
-        print(f"trying register with email: {try_email}, usr: {try_usr}, pw: {try_pw}, pw2: {try_pw2}")
-
-        #* validate input
-        # check sql injection (catch funny people)
-        funny_checks:list = ["DROP_TABLE", "SELECT * FROM", "WHERE 1==1"]
-        for fc in funny_checks:
-            if fc in try_email or fc in try_usr or fc in try_pw:
-                print("dont do that, you know what you did =)")
-                return
-        # check email regex
-        # @TODO
-        # check passwords match
-        if try_pw != try_pw2:
-            print("Passwords do not match")
+        # validate input
+        if not self.validate_input_register(try_email, try_usr, try_pw, try_pw2):
             return
+
+        print(f"trying register with valid input, email: {try_email}, usr: {try_usr}, pw: {try_pw}, pw2: {try_pw2}")
 
         # everything is checked, create new user and send email (email service is out of scope)
         # @TODOs call action handle create register function
 
         return
 
+
+    #* **************************************** input validation functionality ****************************************
+    def validate_input_login(self, try_usr:str, try_pw:str) -> bool: # no overloaded functions =(
+        # naughty?
+        if contains_naughty_stuff(try_usr, try_pw):
+            self.give_failure_feedback(FailureResponse.NAUGHTY)
+
+        # empty?
+        if contains_empty_input([try_usr, try_pw]):
+            self.give_failure_feedback(FailureResponse.EMPTY_FIELDS)
+            return False
+
+        # usr valid?
+        if not validate_username(try_usr):
+            self.give_failure_feedback(FailureResponse.INVALID_USR)
+            return False
+
+        # pw valid?
+        if not validate_password(try_pw):
+            self.give_failure_feedback(FailureResponse.INVALID_PW)
+            return False
+
+        # input is valid
+        return True
+
+
+    def validate_input_register(self, try_email:str, try_usr:str, try_pw:str, try_pw2:str) -> bool:
+        # check base login data
+        if not self.validate_input_login(try_usr, try_pw):
+            return False
+
+        # additional reigster checks
+        # check passwords match
+        if try_pw != try_pw2:
+            self.give_failure_feedback(FailureResponse.MISMATCH_PW)
+            return False
+        # check email
+        if not validate_email(try_email):
+            self.give_failure_feedback(FailureResponse.INVALID_EMAIL)
+            return False
+
+        # input is valid
+        return True
+
+
+    #* **************************************** GUI / feedback functionality ****************************************
     def update_screen(self, to_panel:Enum) -> None:
         # update title
         self.title_label.config(text=to_panel.value)
@@ -145,5 +185,14 @@ class LoginScreen(ScreenBase):
             self.password2_label.grid()
             self.password2_entry.grid()
 
+        # remove fail feedback
+        self.failmsg_label.config(text="")
+
         # update variable
         self.cur_panel = to_panel
+
+    def give_failure_feedback(self, fail_reason:FailureResponse) -> None:
+        # update failmsg text
+        self.failmsg_label.config(text=fail_reason.value)
+        print(f"fail response: {fail_reason.value}")
+        # @TODO could add some fancy stuff here, e.g. 'switch statement' that marks relevant widgets red, etc.
