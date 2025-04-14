@@ -39,6 +39,10 @@ class GUI:
         (currently we don't have session tokens so we always show the login screen)
         @return bool: returns true on successful startup
         """
+
+        self.title_label = tk.Label(self.root_ref, text="HabitTracker", bg='#000', fg="#fff", font=("Roboto", 34), anchor="w")
+        self.title_label.pack()
+
         #* (note to future self: this is c-style 'if ? :' )
         self.open_screen("main") if self.check_user_logged_in() else self.open_screen("login")
 
