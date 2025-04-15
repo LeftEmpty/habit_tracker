@@ -24,8 +24,8 @@ class GUI:
 
         # Initialize and store screen references in Dictionary
         self.screens: Dict[str, ScreenBase] = {
-            "login" : LoginScreen(self.root),
-            "main" : MainScreen(self.root)
+            "login" : LoginScreen(self),
+            "main" : MainScreen(self)
         }
         self.current_screen:tk.Frame|None = None
 

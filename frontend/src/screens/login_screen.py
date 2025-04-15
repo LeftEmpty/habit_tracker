@@ -1,36 +1,19 @@
 import tkinter as tk
 import hashlib
-from enum import Enum
+from frontend.src.lib.gui_enums import PanelState, FailureResponse
 from frontend.src.screens.screen import ScreenBase
 from util.src.validators import contains_empty_input, contains_naughty_stuff, validate_email, validate_username, validate_password
-
-class PanelState(Enum):
-    LOGIN = "Login"
-    REGISTER = "Register"
-
-class FailureResponse(Enum):
-    DEFAULT = "Couldn't process that action."
-    EMPTY_FIELDS = "Please fill in all required fields."
-    INVALID_EMAIL = "Invalid e-mail."
-    INVALID_USR = "Invalid username."
-    INVALID_PW = "Invalid password."
-    MISMATCH_PW = "The passwords don't match"
-    EMAIL_EXISTS = "Email already in use."
-    USR_EXISTS = "Username taken."
-    NAUGHTY = "Dont do that, you know what you did =)"
 
 
 class LoginScreen(ScreenBase):
     #* **************************************** overwriting base class functionality ****************************************
-    def __init__(self, root_reference:tk.Tk) -> None:
+    def __init__(self, root_gui) -> None:
+        """@TODO docstring for class"""
         self.cur_panel = PanelState.LOGIN
-        super().__init__(root_reference) # type: ignore
+        super().__init__(root_gui)
 
     def setup_screen(self) -> None:
-        """setup_screen is called on init (ScreenBase)
-        Create widgets and init layout, then call """
-        # (G)root
-        self.config(bg="#000")
+        super().setup_screen()
 
         # Widgets
         self.title_label = tk.Label(self, text="LOGIN", bg='#000', fg="#fff", font=("Roboto", 34), anchor="w")
@@ -85,12 +68,10 @@ class LoginScreen(ScreenBase):
             return
         print(f"trying login with valid input, usr: {try_usr}, pw: {try_pw}")
 
-        # hash input #? should i hash this here or in the action handler?
-        hashed_usr = hashlib.sha256(try_usr.encode()).hexdigest()
-        hashed_pw = hashlib.sha256(try_pw.encode()).hexdigest()
-
-        # query db via action handler
+        # query db via action handler #? should i hash input here instead of action handler?
         # @TODO call action handler login function
+        self.root_gui.action_handler_ref.try_login_user(try_usr, try_pw)
+
         #if not action_handler.login():
             # handle fail response
 
@@ -166,8 +147,8 @@ class LoginScreen(ScreenBase):
 
 
     #* **************************************** GUI / feedback functionality ****************************************
-    def update_screen(self, to_panel:Enum) -> None:
-        # update title
+    def update_screen(self, to_panel:PanelState) -> None:
+        # update tierencetle
         self.title_label.config(text=to_panel.value)
 
         # adjust layout

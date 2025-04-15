@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from abc import ABC, abstractmethod
 
 class FrameBase(tk.Frame, ABC):
@@ -9,12 +10,7 @@ class FrameBase(tk.Frame, ABC):
     Screens are completely seperate from each other, e.g.: login/main screens
     Panels are somewhat connected in that they are contained in the same notebook on the main screen
     """
-    def __init__(self, root_reference:tk.Tk) -> None:
+    def __init__(self, root_gui) -> None:
         # Make this object a Frame
-        super().__init__(root_reference)
-        self.root_ref = root_reference
-        self.setup_frame()
-
-    @abstractmethod
-    def setup_frame(self)->None:
-        pass
+        super().__init__(root_gui.root)
+        self.root_gui = root_gui
