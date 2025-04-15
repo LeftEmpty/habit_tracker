@@ -27,9 +27,8 @@ def main() -> None:
 
     db:Database = Database(0)
     action_handler = ActionHandler(db)
-    root = tk.Tk()
-    gui = GUI(root)
-    root.mainloop()
+    gui = GUI(action_handler)
+    gui.__start__() # starts mainloop
 
 def cleanup():
     #server.terminate()
