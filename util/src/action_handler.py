@@ -8,9 +8,9 @@ from typing import Optional,Any # we use this cause pylance doesn't know sqlite 
 import hashlib
 
 class ActionHandler:
-    """ActionHandler Object that handles GUI logic, a reference is given to the GUI object.
-    Calls functions (FP) on the db controller and returns values to GUI"""
     def __init__(self, db:Database):
+        """ActionHandler Object that handles GUI logic, a reference is given to the GUI object.
+        Calls functions (FP) on the db controller and returns values to GUI"""
         self.db = db
         pass
 
@@ -28,13 +28,16 @@ class ActionHandler:
         # return user_id
         return False
 
-    def try_login_user(self, usr:str, pw:str, sql_client: Any) -> Optional[User]:
+    def try_login_user(self, try_usr:str, try_pw:str, sql_client: Any = None) -> Optional[User]:
         """checks, formats and sends hashed data to db controller
         creates user object on success, otherwise returns false
 
         @return int|None: returns user_id or none, depending on success of query
         """
-        pass
+        # hash input
+        hashed_usr = hashlib.sha256(try_usr.encode()).hexdigest()
+        hashed_pw = hashlib.sha256(try_pw.encode()).hexdigest()
+
         # fetch data
         # user_id = db_login_user(
         #     sql_client=sql_client,

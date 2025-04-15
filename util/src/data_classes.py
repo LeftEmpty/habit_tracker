@@ -28,8 +28,9 @@ class HabitList:
 
 @dataclass
 class User:
-    user: str
+    user_id: int
     display_name: str
     username: str # hashed
     password: str # hashed
-    habit_list: HabitList
+    email: str
+    habit_list_id: int #HabitList
