@@ -4,8 +4,10 @@ from util.src.action_handler import ActionHandler
 from db.src.database import Database
 #from cli.src.start import start as start_cli
 
+
 import subprocess
 import atexit
+
 
 def main() -> None:
 
@@ -23,19 +25,17 @@ def main() -> None:
     )
     atexit.register(cleanup)
 
-    # start_cli()
-
-    db:Database = Database(0)
-    action_handler = ActionHandler(db)
+    action_handler = ActionHandler()
     gui = GUI(action_handler)
     gui.__start__() # starts mainloop
+
 
 def cleanup():
     #server.terminate()
     #server.join()
     pass
 
+
 if __name__ == "__main__":
     main()
-
 
