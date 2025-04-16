@@ -1,27 +1,69 @@
-from sqlite_rx.client import SQLiteClient
-from sqlite_rx.server import SQLiteServer
-
 import sys, os
+
 sys.path.append(os.path.abspath("."))
 
-from db.logger import log
+from db.util.logger import log
+from db.src.table_definitions import get_all_table_defs
 
+def log_error_message(message: dict) -> None:
+    if message.get("error"):
+        log.error(f"Error: {message['error']['type']} - {message['error']['message']}")
 
+def log_item_message(message: dict) -> None:
+    if message.get("item"):
+        log.info(f"Item: {message['item']}")
 
-def start_db(port=5000):
-    
-    log.info("[DB]...")
+def populate_db(port: int, address: str) -> None:
+    #populate db
     log.info("initializing database..")
+    with SQLiteClient(connect_address=f"{address}:{port}") as client:
+        for i in get_all_table_defs():
+            try:
+                result = client.execute(i)
+                log_item_message(result)
+                log_error_message(result)
+                log.info("Populated table {i} with data")
+            except SQLiteRxConnectionError as e:
+                print(f"Error connecting to SQLite server: {e}")
 
-    server = SQLiteServer(database="habit_db.sqlite", bind_address=f"tcp://127.0.0.1:{port}")
+def start_db(port=5000, environment="file") -> None:
+        
+    server = SQLiteServer(database=("habit_db.sqlite" if environment == "file" else ":memory:"), bind_address=f"tcp://127.0.0.1:{port}")
     log.info(f"Started Server at port {port}")
 
     server.start()
-    server.join()
+    
+    # populate the database with initial tables
+    populate_db(get_start_port(sys.argv), get_start_address(sys.argv))
+
+    server.join()  # wait for the server to finish
+
+def get_start_port(argv: list[str])  -> int: 
+    if len(argv) > 1:
+        try:
+            if int(argv[1]) < 1025 or int(argv[1]) > 65535: 
+                raise ValueError
+            
+            return int(argv[1])
+        
+        except ValueError:
+            print("ERROR: invalid port number provided")
+            sys.exit(1)
+
+    return 5000  # default port
+    
+def get_start_address(argv: list[str]) -> str:
+    if len(argv) > 2:
+        return "tcp://" + argv[2]
+    return "tcp://127.0.0.1"
+
+
 
 if __name__ == "__main__":
-    start_db()
-
+    start_db(get_start_port(sys.argv))
+    
+    
+    
 
 
 #     if not self.is_valid_user_id(user_id):
