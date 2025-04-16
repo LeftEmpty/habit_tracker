@@ -1,5 +1,6 @@
 from frontend.src.data.habits import HabitSubscription, HabitData
 
+
 class User:
     def __init__(self, user_id:int, display_name:str, username:str, password:str, email:str, habits:list[HabitSubscription] = []):
         """_summary_
@@ -21,7 +22,15 @@ class User:
         self.password = password
         self.habit_subscriptions = habits
 
+        self.init_complete = True
+
+    def __bool__(self):
+        return self.user_id is not None
+
+    # def __new__(cls, val=None, next=None):
+    #     if val is None and next is None:
+    #         return None
+
     def get_all_subscribed_habits(self) -> list[HabitSubscription]:
         # @TODO
         return []
-#a
