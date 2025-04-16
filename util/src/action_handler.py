@@ -1,9 +1,7 @@
 # import getpass
 #from cli.src.sql_controller import db_create_user, db_login_user
 from sqlite_rx.client import SQLiteClient # type: ignore
-from util.src.validators import contains_empty_input, contains_naughty_stuff, validate_email, validate_username, validate_password
-from util.src.data_classes import Habit
-from util.src.data_classes import User
+from db.src.database import get_user_by_login
 from typing import Optional,Any # we use this cause pylance doesn't know sqlite classes
 import hashlib
 
@@ -35,28 +33,21 @@ class ActionHandler:
         @return int|None: returns user_id or none, depending on success of query
         """
 
-        # validate input
-
         # hash input
         hashed_usr = hashlib.sha256(try_usr.encode()).hexdigest()
         hashed_pw = hashlib.sha256(try_pw.encode()).hexdigest()
 
-        # fetch data
-        # user_id = db_login_user(
-        #     sql_client=sql_client,
-        #     username=usr,
-        #     password=pw
-        # )
-
-        # check if valid, create user data object
-
-        # successfull login - create user and give feedback to frontend
-        # if user_id:
-        #     # @TODO init a user object with data and store it in memory
-        #     return True
-        # # failed login
-        # else: return False
+        # query database with user data
+        user_result = get_user_by_login(hashed_usr, hashed_pw)
+        print(user_result)
         return False
+
+        # print(user_result)
+        # if (user_result.get("error") or len(user_result.get("items")) == 0):
+        #     return False
+        # # @TODO create user with fetched data and set current user (in gui)
+        # user_data = user_result.get("items")[0][0]
+        # return True
 
     def try_delete_habit(self) -> bool:
         return False

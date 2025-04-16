@@ -2,7 +2,6 @@ import sqlite3
 import hashlib
 from db.src.database import Database
 from typing import List
-from util.src.data_classes import User
 
 # additional conditional elements in GUI?
 # commands?
@@ -15,17 +14,18 @@ def create_tables(db:Database) -> None:
 
 
 def get_user_data():
-    return User(
-        0,
-        "Max",
-        hashlib.sha256("MaxTheGreatest".encode()).hexdigest(),
-        hashlib.sha256("iam(not)secure".encode()).hexdigest(),
-        "max.musterman@gmail.com",
-        0
-    )
+    # return User(
+    #     0,
+    #     "Max",
+    #     hashlib.sha256("MaxTheGreatest".encode()).hexdigest(),
+    #     hashlib.sha256("iam(not)secure".encode()).hexdigest(),
+    #     "max.musterman@gmail.com",
+    #     0
+    # )
+    pass
 
 
-def generate_test_user(user_data:User):
+def generate_test_user(user):
     """Creates a test users and adds them to the user table"""
     #? this should maybe be in global space to reduce stack memory usage on function call, or is it perma in memory?
 

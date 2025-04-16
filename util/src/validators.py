@@ -1,5 +1,6 @@
 import re
-from frontend.src.lib.gui_enums import InputResponse
+
+from util.src.gui_enums import InputResponse
 
 # helper module for validation
 """ keep code clean and reduces bloated classes """
