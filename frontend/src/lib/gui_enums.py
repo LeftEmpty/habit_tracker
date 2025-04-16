@@ -5,8 +5,11 @@ class PanelState(Enum):
     LOGIN = "Login"
     REGISTER = "Register"
 
-class FailureResponse(Enum):
+class InputResponse(Enum):
     DEFAULT = "Couldn't process that action."
+
+    SUCCESS = "Success."
+
     EMPTY_FIELDS = "Please fill in all required fields."
     INVALID_EMAIL = "Invalid e-mail."
     INVALID_USR = "Invalid username."

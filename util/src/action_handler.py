@@ -1,17 +1,17 @@
 # import getpass
 #from cli.src.sql_controller import db_create_user, db_login_user
 from sqlite_rx.client import SQLiteClient # type: ignore
-from db.src.database import Database
+from util.src.validators import contains_empty_input, contains_naughty_stuff, validate_email, validate_username, validate_password
 from util.src.data_classes import Habit
 from util.src.data_classes import User
 from typing import Optional,Any # we use this cause pylance doesn't know sqlite classes
 import hashlib
 
+
 class ActionHandler:
-    def __init__(self, db:Database):
+    def __init__(self):
         """ActionHandler Object that handles GUI logic, a reference is given to the GUI object.
         Calls functions (FP) on the db controller and returns values to GUI"""
-        self.db = db
         pass
 
     def try_create_user(self, e_mail:str, usr:str, pw:str) -> bool:
@@ -23,17 +23,20 @@ class ActionHandler:
         #     sql_client=sql_client,
         #     #display_name=display_name,
         #     username=usr,
-        #     password=pw
+        #     password=pw``
         # )
         # return user_id
         return False
 
-    def try_login_user(self, try_usr:str, try_pw:str, sql_client: Any = None) -> Optional[User]:
+    def try_login_user(self, try_usr:str, try_pw:str, sql_client: Any = None)  -> bool:
         """checks, formats and sends hashed data to db controller
         creates user object on success, otherwise returns false
 
         @return int|None: returns user_id or none, depending on success of query
         """
+
+        # validate input
+
         # hash input
         hashed_usr = hashlib.sha256(try_usr.encode()).hexdigest()
         hashed_pw = hashlib.sha256(try_pw.encode()).hexdigest()
@@ -53,6 +56,10 @@ class ActionHandler:
         #     return True
         # # failed login
         # else: return False
+        return False
 
-    def try_get_all_habits(self, user_id:int) -> Optional[list[Habit]]:
-        pass
+    def try_delete_habit(self) -> bool:
+        return False
+
+    def try_add_habit(self) -> bool:
+        return False

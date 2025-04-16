@@ -1,8 +1,8 @@
 import tkinter as tk
 import hashlib
-from frontend.src.lib.gui_enums import PanelState, FailureResponse
+from frontend.src.lib.gui_enums import PanelState, InputResponse
 from frontend.src.screens.screen import ScreenBase
-from util.src.validators import contains_empty_input, contains_naughty_stuff, validate_email, validate_username, validate_password
+from util.src.validators import validate_input_login, validate_input_register
 
 
 class LoginScreen(ScreenBase):
@@ -54,111 +54,63 @@ class LoginScreen(ScreenBase):
     def try_login(self) -> None:
         """Swap panel OR Check input, then pass validated and hashed input to action handler
         On faiklure: give failure response feebback"""
-        # check we're on the right panel, remove failure msg, if necessary update and return
-        if self.cur_panel == PanelState.REGISTER:
-            self.update_screen(PanelState.LOGIN)
-            return
+        self.update_screen(PanelState.LOGIN)
 
-        # get input & convert to string (type check)
+        # get input
         try_usr:str = str(self.username_entry.get())
         try_pw:str = str(self.password_entry.get())
 
         # validate input
-        if not self.validate_input_login(try_usr, try_pw):
+        response = validate_input_login(try_usr, try_pw)
+        if response != InputResponse.SUCCESS:
+            self.give_failure_feedback(response)
             return
-        print(f"trying login with valid input, usr: {try_usr}, pw: {try_pw}")
 
         # query db via action handler #? should i hash input here instead of action handler?
-        # @TODO call action handler login function
-        self.root_gui.action_handler_ref.try_login_user(try_usr, try_pw)
-
-        #if not action_handler.login():
-            # handle fail response
+        print(f"trying login with valid input, usr: {try_usr}, pw: {try_pw}")
+        if not self.root_gui.action_handler_ref.try_login_user(try_usr, try_pw):
+            # @TODO handle input valid but no user found / accessible
+            return
 
 
     def try_register(self) -> None:
         """Swap panel OR Check input, then pass validated and hashed input to action handler
         On faiklure: give failure response feebback."""
-        # check we're on the right panel, if necessary update and return
-        if self.cur_panel == PanelState.LOGIN:
-            self.update_screen(PanelState.REGISTER)
-            return
+        self.update_screen(PanelState.REGISTER)
 
-        # get input & convert to string (type check)
+        # get input
         try_email:str = str(self.email_entry.get())
         try_usr:str = str(self.username_entry.get())
         try_pw:str = str(self.password_entry.get())
         try_pw2:str = str(self.password2_entry.get())
 
         # validate input
-        if not self.validate_input_register(try_email, try_usr, try_pw, try_pw2):
+        response = validate_input_register(try_email, try_usr, try_pw, try_pw2)
+        if response != InputResponse.SUCCESS:
+            self.give_failure_feedback(response)
             return
 
-        print(f"trying register with valid input, email: {try_email}, usr: {try_usr}, pw: {try_pw}, pw2: {try_pw2}")
-
         # everything is checked, create new user and send email (email service is out of scope)
-        # @TODOs call action handle create register function
-
-        return
-
-
-    #* **************************************** input validation functionality ****************************************
-    def validate_input_login(self, try_usr:str, try_pw:str) -> bool: # no overloaded functions =(
-        # naughty?
-        if contains_naughty_stuff(try_usr, try_pw):
-            self.give_failure_feedback(FailureResponse.NAUGHTY)
-
-        # empty?
-        if contains_empty_input([try_usr, try_pw]):
-            self.give_failure_feedback(FailureResponse.EMPTY_FIELDS)
-            return False
-
-        # usr valid?
-        if not validate_username(try_usr):
-            self.give_failure_feedback(FailureResponse.INVALID_USR)
-            return False
-
-        # pw valid?
-        if not validate_password(try_pw):
-            self.give_failure_feedback(FailureResponse.INVALID_PW)
-            return False
-
-        # input is valid
-        return True
-
-
-    def validate_input_register(self, try_email:str, try_usr:str, try_pw:str, try_pw2:str) -> bool:
-        # check base login data
-        if not self.validate_input_login(try_usr, try_pw):
-            return False
-
-        # additional reigster checks
-        # check passwords match
-        if try_pw != try_pw2:
-            self.give_failure_feedback(FailureResponse.MISMATCH_PW)
-            return False
-        # check email
-        if not validate_email(try_email):
-            self.give_failure_feedback(FailureResponse.INVALID_EMAIL)
-            return False
-
-        # input is valid
-        return True
-
+        print(f"trying register with valid input, email: {try_email}, usr: {try_usr}, pw: {try_pw}, pw2: {try_pw2}")
+        if not self.root_gui.action_handler_ref.try_register_user(try_email, try_usr, try_pw2, try_pw2):
+            # @TODOs call action handle create register function
+            return
 
     #* **************************************** GUI / feedback functionality ****************************************
     def update_screen(self, to_panel:PanelState) -> None:
-        # update tierencetle
-        self.title_label.config(text=to_panel.value)
+        """updates panel on LoginScreen, but only if necessary
+        @param to_panel: new panel that screen should update to"""
+        if self.cur_panel == to_panel: return
+        self.cur_panel = to_panel
 
         # adjust layout
+        self.title_label.config(text=to_panel.value)
         if to_panel == PanelState.LOGIN:
             # Layout
             self.email_label.grid_remove()
             self.email_entry.grid_remove()
             self.password2_label.grid_remove()
             self.password2_entry.grid_remove()
-
         elif to_panel == PanelState.REGISTER:
             # Layout
             self.email_label.grid()
@@ -166,14 +118,12 @@ class LoginScreen(ScreenBase):
             self.password2_label.grid()
             self.password2_entry.grid()
 
-        # remove fail feedback
+        # remove fail feedback when changing screens
         self.failmsg_label.config(text="")
 
-        # update variable
-        self.cur_panel = to_panel
-
-    def give_failure_feedback(self, fail_reason:FailureResponse) -> None:
-        # update failmsg text
+    def give_failure_feedback(self, fail_reason:InputResponse) -> None:
+        """sets the text of 'failmsg_lbael' element according to the received response
+        @param fail_reason: response enum, value of Enum will determine text"""
         self.failmsg_label.config(text=fail_reason.value)
         print(f"fail response: {fail_reason.value}")
         # @TODO could add some fancy stuff here, e.g. 'switch statement' that marks relevant widgets red, etc.
