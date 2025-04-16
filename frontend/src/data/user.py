@@ -24,3 +24,4 @@ class User:
     def get_all_subscribed_habits(self) -> list[HabitSubscription]:
         # @TODO
         return []
+#a
