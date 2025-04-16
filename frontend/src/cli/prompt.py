@@ -1,11 +1,11 @@
 from typing import List
 from frontend.src.cli.input_option import InputOption
 
-# @DEPRECATED - unfinished and abandonded when moved to gui
+# @DEPRECATED - legacy code, abandonded when changed to gui
 
 def prompt_user(options:List[InputOption])->bool:
-    """ Prints the different options, asks for input and calls the respective functionality of selelected option
-    @param 'options': array of options to select, a  
+    """Prints the different options, asks for input and calls the respective functionality of selelected option
+    @param 'options': array of options to select, a
     Returns:
         bool: returns wheter option was successfully selected
     """
@@ -15,7 +15,7 @@ def prompt_user(options:List[InputOption])->bool:
         print("Press the respective key to choose an option.")
         for option in options:
             if (not option.output_option()): return
-        
+
         # Get user input
         choice = input("Enter your choice: ").strip()
 
@@ -31,7 +31,7 @@ def prompt_user(options:List[InputOption])->bool:
                 print("Please choose a number that correlates to an option.")
         else:
             print("Invalid input. Please enter a number (correlating to an option).")
-    
+
     return False
 
 def debug_prompt_panels()->None:
@@ -43,19 +43,19 @@ def debug_prompt_panels()->None:
     InputOption(2, "Open Dashboard Panel", open_panel_dashboard),
     InputOption(3, "Open Statistics Panel", open_panel_statistics),
     ]
-    
+
     # Prompt user
     prompt_user(Options)
-    
-    
+
+
 def open_panel_login()->bool:
     """ Opens the login panel, i.e. prints out the necessary CLI stuff,
     should not be called intentionally from user. show this if user is logged out
     @return 'bool': True on success
     """
-    
+
     # @TODO - type check input, very important
-    
+
     return True
 
 def evaluate_login(username:str, password:str)->bool:
@@ -66,9 +66,9 @@ def open_panel_modify_habit()->bool:
     """ Opens the habit modification panel, i.e. prints out the necessary CLI stuff 
     @return 'bool': True on success
     """
-    
+
     print(f"opening habit modification")
-    
+
     return True
 
 def open_panel_dashboard()->bool:
@@ -76,16 +76,16 @@ def open_panel_dashboard()->bool:
     dashboard contains a list of habits that can / should be completed on the given day
     @return 'bool': True on success
     """
-    
+
     print(f"opening dashboard")
-    
+
     return True
 
 def open_panel_statistics()->bool:
     """ Opens the statistics panel, i.e. prints out the necessary CLI stuff 
     @return 'bool': True on success
     """
-    
+
     print(f"opening statistics")
-    
+
     return True
