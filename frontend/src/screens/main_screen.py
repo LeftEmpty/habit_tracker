@@ -15,12 +15,14 @@ class MainScreen(ScreenBase):
         # debug / info
         print("main screen setup")
 
-        # @TODO
-        self.cur_user = "Tester"
-        hello_msg:str = "Hello, " + self.cur_user + "."
+        if self.root_gui.cur_user != None:
+            usr_name = ", " + self.root_gui.cur_user.display_name
+        else:
+            usr_name = ""
+        hello_msg:str = "Hello" + usr_name + "."
 
         # Widgets
-        self.title_label = tk.Label(self, text=hello_msg, bg='#000', fg="#fff", font=("Roboto", 24), anchor="w")
+        self.title_label = tk.Label(self, text=hello_msg, bg='#000', fg="#fff", font=("Roboto", 20, "italic"), anchor="w")
         self.notebook = ttk.Notebook(self)
 
         # Layout
