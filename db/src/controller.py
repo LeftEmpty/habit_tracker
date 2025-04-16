@@ -13,7 +13,7 @@ class Connection(Enum):
     FILE = "db.sqlite"
 
 
-def db_login_user(username: str, password: str, conn: Connection = Connection.FILE) -> int:
+def db_get_userid_by_credentials(username: str, password: str, conn: Connection = Connection.FILE) -> int:
     """Query the db for a user login with the provided credentials.
 
     Args:
@@ -21,7 +21,7 @@ def db_login_user(username: str, password: str, conn: Connection = Connection.FI
         password (str): password of the user
 
     Returns:
-        int: user_id if successful. -1 for not found user. -2 for not unique users (if this happens i messed up tho)
+        int: user_id if successful. -1 for not found user.
     """    
     cx = sqlite3.connect(conn.value)
     result = cx.execute(
@@ -35,10 +35,7 @@ def db_login_user(username: str, password: str, conn: Connection = Connection.FI
     
     if result.fetchall() is None:
         log.info(f"User for {username} not found")
-        return -1 # user not found
-    elif len(result.fetchall()) > 1:
-        log.warning(f"Multiple users found for {username}")
-        return -2 # multiple users found with same credentials
+        return -1
     else:
         return result.fetchone()[0] # return the user_id
     
