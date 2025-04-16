@@ -1,4 +1,5 @@
 import re
+from frontend.src.lib.gui_enums import InputResponse
 
 # helper module for validation
 """ keep code clean and reduces bloated classes """
@@ -38,3 +39,36 @@ def contains_naughty_stuff(*args: str) -> bool:
                 return True
 
     return False
+
+
+#* **************************************** login screen functionality ****************************************
+def validate_input_login(try_usr:str, try_pw:str) -> InputResponse: # no overloaded functions =(
+    # naughty?
+    if contains_naughty_stuff(try_usr, try_pw):
+        return InputResponse.NAUGHTY
+    # empty?
+    if contains_empty_input([try_usr, try_pw]):
+        return InputResponse.EMPTY_FIELDS
+    # usr valid?
+    if not validate_username(try_usr):
+        return InputResponse.INVALID_USR
+    # pw valid?
+    if not validate_password(try_pw):
+        return InputResponse.INVALID_PW
+    # input is valid
+    return InputResponse.SUCCESS
+
+
+def validate_input_register(try_email:str, try_usr:str, try_pw:str, try_pw2:str) -> InputResponse:
+    # check base login data
+    if validate_input_login(try_usr, try_pw) != InputResponse.SUCCESS:
+        return validate_input_login(try_usr, try_pw)
+    # additional reigster checks
+    # check passwords match
+    if try_pw != try_pw2:
+        return InputResponse.MISMATCH_PW
+    # check email
+    if not validate_email(try_email):
+        return InputResponse.INVALID_EMAIL
+    # input is valid
+    return InputResponse.SUCCESS
