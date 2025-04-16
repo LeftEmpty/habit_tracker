@@ -11,14 +11,14 @@ User: str = """
     )"""
 
 HabitData: str = """
-    CREATE TABLE IF NOT EXISTS habit(
+    CREATE TABLE IF NOT EXISTS habit_data(
         habit_id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
-        description TEXT,
+        description TEXT
     )"""
 
 HabitSubscription: str = """
-    CREATE TABLE IF NOT EXISTS habit_list (
+    CREATE TABLE IF NOT EXISTS habit_subscription (
         habit_sub_id INTEGER PRIMARY KEY,
         user_id INTEGER NOT NULL,
         habit_id INTEGER NOT NULL,
