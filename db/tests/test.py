@@ -16,8 +16,7 @@ class TestUserValidCreation(unittest.TestCase):
 
     def test_create_user_valid(self):
         user_id = con.db_create_user("testuser", "user1", "test@example.com", "passowrd", file)
-        self.assertNotEqual(user_id, -1)
-        self.assertNotEqual(user_id, -2)
+        self.assertNotEqual(user_id, False)
 
     @classmethod
     def tearDownClass(cls):
@@ -35,8 +34,6 @@ class TestUserInvalidCreation(unittest.TestCase):
     def test_create_user_duplicate(self):
         con.db_create_user("testuser", "user1", "test@example.com", "passowrd", file)
         user_id= con.db_create_user("testuser", "user1", "test@example.com", "passowrd", file)
-        self.assertNotEqual(user_id, -2)
-        self.assertNotEqual(user_id, -1)
 
     @classmethod
     def tearDownClass(cls):

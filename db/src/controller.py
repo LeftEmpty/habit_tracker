@@ -43,9 +43,8 @@ def db_login_user(username: str, password: str, conn: Connection = Connection.FI
         return result.fetchone()[0] # return the user_id
     
 
-def db_create_user(display_name: str, username: str, email: str, password: str, conn: Connection = Connection.FILE) -> None:
+def db_create_user(display_name: str, username: str, email: str, password: str, conn: Connection = Connection.FILE) -> bool:
     """Create a new user in the Database with the given credentials.
-    * TODO define return type
     Args:
         display_name (str): Name to be displayed in the GUI elements
         username (str): internal username for login and db (Unique)
@@ -61,8 +60,10 @@ def db_create_user(display_name: str, username: str, email: str, password: str, 
             """,
             (display_name, email, username, password)
         )
+        return True
     except sqlite3.Error as e:
         log.error(f"Error creating user: {e}")
+        return False
     finally:
         cx.commit()
         cx.close()
