@@ -4,6 +4,7 @@ from typing import Dict
 from frontend.src.screens.screen import ScreenBase
 from frontend.src.screens.login_screen import LoginScreen
 from frontend.src.screens.main_screen import MainScreen
+from frontend.src.data.user import User
 
 from util.src.action_handler import ActionHandler
 
@@ -24,10 +25,9 @@ class GUI:
 
         # Initialize and store screen references in Dictionary
         self.screens: Dict[str, ScreenBase] = {
-            "login" : LoginScreen(self),
-            "main" : MainScreen(self)
+            "login" : LoginScreen(self)
         }
-        self.current_screen:tk.Frame|None = None
+        self.cur_screen:tk.Frame|None = None
 
         # Start the GUI application
         self.cur_user = None
@@ -48,9 +48,18 @@ class GUI:
         self.title_label = tk.Label(self.root, text="HabitTracker", bg='#000', fg="#fff", font=("Roboto", 34), anchor="w")
         self.title_label.pack()
 
-        self.open_screen("main") if self.check_user_logged_in() else self.open_screen("login")
+        self.open_screen("login") # if not self.check_user_logged_in() else self.open_screen("main")
 
         return True
+
+
+    def on_login(self, user:User) -> None:
+        """ Called by login screen on successful login by a valid user
+        cur_user should already be set at this point by the login screen"""
+        if user == None: return
+        self.cur_user = user
+        self.screens["main"] = MainScreen(self, user)
+        self.open_screen("main")
 
 
     def open_screen(self, screen_to_show:str)->None:
@@ -60,15 +69,15 @@ class GUI:
         if screen_to_show not in self.screens:
             return
         screen:ScreenBase|None = self.screens.get(screen_to_show)
-        if screen is None: return
+        if screen is None or screen == self.cur_screen: return
 
         # Collapse current screen & show new one
-        if self.current_screen:
-             self.current_screen.pack_forget()
+        if self.cur_screen is not None:
+            self.cur_screen.destroy()
         screen.pack(expand=True, fill="both")
         screen.place(in_=self.root, anchor="center", relx=.5, rely=.5)
-
+        self.cur_screen = screen
 
     def check_user_logged_in(self)->bool:
-        # @TODO out of scope but should be added in full release
+        # @TODO session token is out of scope but could be added in 'full release'
         return not self.cur_user is None
