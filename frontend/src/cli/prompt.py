@@ -15,7 +15,6 @@ def prompt_user(options:List[InputOption])->bool:
         print("Press the respective key to choose an option.")
         for option in options:
             if (not option.output_option()): return
-
         # Get user input
         choice = input("Enter your choice: ").strip()
 
@@ -31,7 +30,6 @@ def prompt_user(options:List[InputOption])->bool:
                 print("Please choose a number that correlates to an option.")
         else:
             print("Invalid input. Please enter a number (correlating to an option).")
-
     return False
 
 def debug_prompt_panels()->None:

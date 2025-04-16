@@ -30,7 +30,7 @@ class GUI:
         self.current_screen:tk.Frame|None = None
 
         # Start the GUI application
-        self.user = None
+        self.cur_user = None
         self.on_startup()
 
 
@@ -71,4 +71,4 @@ class GUI:
 
     def check_user_logged_in(self)->bool:
         # @TODO out of scope but should be added in full release
-        return not self.user is None
+        return not self.cur_user is None
