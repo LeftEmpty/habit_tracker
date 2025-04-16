@@ -30,10 +30,10 @@ class TestUserInvalidCreation(unittest.TestCase):
         os.remove("test.sqlite") if os.path.exists("test.sqlite") else None
         con.db_init_db(file)
 
-    @unittest.expectedFailure
     def test_create_user_duplicate(self):
         con.db_create_user("testuser", "user1", "test@example.com", "passowrd", file)
         user_id= con.db_create_user("testuser", "user1", "test@example.com", "passowrd", file)
+        self.assertEqual(user_id, False)
 
     @classmethod
     def tearDownClass(cls):
@@ -64,10 +64,9 @@ class TestGetUserNotFound(unittest.TestCase):
         os.remove("test.sqlite") if os.path.exists("test.sqlite") else None
         con.db_init_db(file)
 
-    @unittest.expectedFailure
     def test_get_user_by_id_wrong(self):
         user= con.db_create_user("testuser", "user1", "test@example.com", "passowrd", file)
-        self.assertEqual(2, con.db_get_user_by_id(1, file)[0][0])
+        self.assertEqual([], con.db_get_user_by_id(2, file))
 
     @classmethod
     def tearDownClass(cls):
