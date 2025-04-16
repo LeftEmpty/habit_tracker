@@ -30,14 +30,14 @@ def db_get_userid_by_credentials(username: str, password: str, conn: Connection 
     """,
     (username, password)
     )
-
-    cx.close()
     
-    if result.fetchall() is None:
+    result = result.fetchall()
+    cx.close()
+    if len(result) == 0 or not result:
         log.info(f"User for {username} not found")
         return -1
-    else:
-        return result.fetchone()[0] # return the user_id
+    else: 
+        return result[0][0]
     
 
 def db_create_user(display_name: str, username: str, email: str, password: str, conn: Connection = Connection.FILE) -> bool:
@@ -89,9 +89,6 @@ def db_get_user_by_id(user_id: int, conn: Connection = Connection.FILE) -> list:
     finally:
         cx.close()
     
-
-
-
 
 def db_delete_user(user_id: int, conn: Connection = Connection.FILE) -> None:
     cx = sqlite3.connect(conn.value)
