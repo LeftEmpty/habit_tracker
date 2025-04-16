@@ -78,6 +78,33 @@ class TestGetUserNotFound(unittest.TestCase):
         os.remove("test.sqlite")
 
 
+class TestDeleteUser(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        os.remove("test.sqlite") if os.path.exists("test.sqlite") else None
+        con.db_init_db(file)
+    def test_delete_user(self):
+        user= con.db_create_user("testuser", "user1", "test@example.com", "passowrd", file)
+        con.db_delete_user(1, file)
+        self.assertEqual(0, len(con.db_get_user_by_id(1, file)))
+
+
+class TestCreateHabit(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        os.remove("test.sqlite") if os.path.exists("test.sqlite") else None
+        con.db_init_db(file)
+
+    def test_create_habit(self):
+        con.db_create_user("testuser", "user1", "test@example.com", "passowrd", file)
+        habit = con.db_create_habit(1, "testhabit", "this is a test habit", True, file)
+        self.assertEqual(1, len(con.db_get_habit_by_id(1, file)))
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        os.remove("test.sqlite") if os.path.exists("test.sqlite") else None
+
+
 
 if __name__ == '__main__':
     unittest.main()

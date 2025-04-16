@@ -83,8 +83,8 @@ def db_get_user_by_id(user_id: int, conn: Connection = Connection.FILE) -> list:
             """,
             (user_id,)
         )
-        user_info = result.fetchall()
-        return user_info
+    
+        return result.fetchall()
     except sqlite3.Error as e:
         log.error(f"Error retrieving user by ID of {user_id}: {e}")
         return []
@@ -97,33 +97,98 @@ def db_get_user_by_id(user_id: int, conn: Connection = Connection.FILE) -> list:
 
 def db_delete_user(user_id: int, conn: Connection = Connection.FILE) -> None:
     cx = sqlite3.connect(conn.value)
-    result= cx.execute(
-        """
-        DELETE FROM user WHERE username = ?
-        """,
-        (user_id,)
-    )
+
+    try:
+        result= cx.execute(
+            """
+            DELETE FROM user WHERE user_id  = ?
+            """,
+            str(user_id)
+        )
+    except sqlite3.Error as e:
+        log.error(f"Error deleting user with ID of {user_id}: {e}")
+    finally:
+        cx.commit()
+        cx.close()
 
 
 
 #---------------------------------------------HABIT---------------------------------------------
 
-def db_create_habit(habit_name: str, habit_description: str, frequency: int, timeframe: str) -> None:
-    result = get_db_connection().execute(
+def db_create_habit(user_id: int, habit_name: str, habit_description: str = "", public: bool = False, conn: Connection = Connection.FILE) -> None:
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
         """
-        INSERT INTO habit (name, description, frequency, timeframe)
+        INSERT INTO habit_data (name, description, public, user_id)
         VALUES (?, ?, ?, ?)
         """,
-        (habit_name, habit_description, frequency, timeframe)
+        (habit_name, habit_description, public, user_id)
     )
+    except sqlite3.Error as e:
+        log.error(f"Error creating habit {habit_name} {habit_description}: {e}")
+    finally:
+        cx.commit()
+        cx.close()
+
+
+def db_get_habit_by_id(habit_id: int, conn: Connection = Connection.FILE) -> list:
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+        """
+        SELECT * FROM habit_data WHERE habit_id = ?
+        """,
+        str(habit_id)
+    )
+        return result.fetchall()
+    except sqlite3.Error as e:
+        log.error(f"Error getting habit with ID of {habit_id}: {e}")
+        return []
+    finally:
+        cx.commit()
+        cx.close()
+
+def db_delete_habit(habit_id: int, conn: Connection = Connection.FILE) -> None:
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+        """
+        DELETE FROM habit WHERE habit_id = ?
+        """,
+        str(habit_id)
+    )
+    except sqlite3.Error as e:
+        log.error(f"Error deleting habit with ID of {habit_id}: {e}")
+    finally:
+        cx.commit()
+        cx.close()
+
+def db_modify_habit(habit_id: int, new_name: str, new_description: str = "", public: bool = False, conn: Connection = Connection.FILE) -> None:
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+            """
+            UPDATE habit SET name = ?, description = ?, public = ? WHERE habit_id = ?
+            """,
+            (new_name, new_description, public, str(habit_id))
+        )
+    except sqlite3.Error as e:
+        log.error(f"Error modifying habit with ID of {habit_id}: {e}")
+    finally:
+        cx.commit()
+        cx.close()
 
 
 #---------------------------------------------DB INIT---------------------------------------------
 def db_init_db(conn: Connection = Connection.FILE) -> None:
-    cx = sqlite3.connect(conn.value)
+    
     for i in get_all_table_defs():
-        cx.execute(i)
-        cx.commit()
+        try:
+            cx = sqlite3.connect(conn.value)
+            log.info("Creating table: " + str(i))
+            cx.execute(i)
+        except sqlite3.Error as e:
+            log.error(f"Error creating table {i}: {e}")
 
-    cx.close() 
-
+    
