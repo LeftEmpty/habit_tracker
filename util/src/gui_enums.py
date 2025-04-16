@@ -17,4 +17,5 @@ class InputResponse(Enum):
     MISMATCH_PW = "The passwords don't match"
     EMAIL_EXISTS = "Email already in use."
     USR_EXISTS = "Username taken."
+    USR_NOTFOUND = "Wrong login information."
     NAUGHTY = "Dont do that, you know what you did =)"
