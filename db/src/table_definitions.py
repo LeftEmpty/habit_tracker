@@ -3,7 +3,7 @@ def get_all_table_defs() -> list[str]:
 
 User: str = """
     CREATE TABLE IF NOT EXISTS user (
-        user_id INTEGER PRIMARY KEY,
+        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
         display_name TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
         username TEXT NOT NULL UNIQUE,
@@ -11,15 +11,18 @@ User: str = """
     )"""
 
 HabitData: str = """
-    CREATE TABLE IF NOT EXISTS habit(
-        habit_id INTEGER PRIMARY KEY,
+    CREATE TABLE IF NOT EXISTS habit_data(
+        habit_id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         description TEXT,
+        public BOOLEAN DEFAULT FALSE,
+        user_id INTEGER NOT NULL,
+        FOREIGN KEY(user_id) REFERENCES user(user_id)
     )"""
 
 HabitSubscription: str = """
-    CREATE TABLE IF NOT EXISTS habit_list (
-        habit_sub_id INTEGER PRIMARY KEY,
+    CREATE TABLE IF NOT EXISTS habit_subscription (
+        habit_sub_id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         habit_id INTEGER NOT NULL,
         start_date TEXT NOT NULL,
@@ -27,7 +30,7 @@ HabitSubscription: str = """
         periodicty TEXT NOT NULL,
         cur_streak INTEGER NOT NULL,
         max_streak INTEGER NOT NULL,
-        FOREIGN KEY(user_id) REFERENCES User(user_id),
+        FOREIGN KEY(user_id) REFERENCES User(user_id) ON DELETE CASCADE,
         FOREIGN KEY(habit_id) REFERENCES HabitData(habit_id)
     )"""
 
