@@ -7,3 +7,5 @@ habit_db.sqlite
 habit_db.sqlite-wal
 habit_db.sqlite-shm
 db_logs.log
+.vscode/settings.json
+db/src/dillen.py
