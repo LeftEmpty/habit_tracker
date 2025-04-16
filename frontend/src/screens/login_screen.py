@@ -2,6 +2,8 @@ import tkinter as tk
 from frontend.src.screens.screen import ScreenBase
 from util.src.validators import validate_input_login, validate_input_register
 from util.src.gui_enums import PanelState, InputResponse
+from frontend.src.screens.main_screen import MainScreen
+
 
 class LoginScreen(ScreenBase):
     #* **************************************** overwriting base class functionality ****************************************
@@ -25,7 +27,7 @@ class LoginScreen(ScreenBase):
         self.password2_entry = tk.Entry(self, show="*")
         self.login_button = tk.Button(self, text="Login", fg='#fff', bg='#000', borderwidth=2, relief="flat", command=self.try_login)
         self.register_button = tk.Button(self, text="Register", fg='#fff', bg='#000', borderwidth=2, relief="flat", command=self.try_register)
-        self.failmsg_label = tk.Label(self, text="", bg='#000', fg="red", font=("Roboto", 9, "italic"), anchor="center")
+        self.inputfeedback_label = tk.Label(self, text="", bg='#000', fg="#fff", font=("Roboto", 9, "italic"), anchor="center")
 
         # Set Layout
         self.title_label.grid(row=0, column=0, columnspan=2, pady=8, padx=8, sticky="w")
@@ -39,7 +41,7 @@ class LoginScreen(ScreenBase):
         self.password2_entry.grid(row=4, column=1, columnspan=2)
         self.login_button.grid(row=5, column=0, pady=12)
         self.register_button.grid(row=5, column=2, pady=18)
-        self.failmsg_label.grid(row=6, column=0, columnspan=3, pady=8)
+        self.inputfeedback_label.grid(row=6, column=0, columnspan=3, pady=8)
 
         # Updatee Layout to reflect current panel state (init LOGIN)
         self.update_screen(PanelState.LOGIN)
@@ -51,7 +53,7 @@ class LoginScreen(ScreenBase):
     #* **************************************** login / register functionality ****************************************
     def try_login(self) -> None:
         """Swap panel OR Check input, then pass validated and hashed input to action handler
-        On faiklure: give failure response feebback"""
+        On faiklure: give input response feebback"""
         if self.update_screen(PanelState.LOGIN): return
 
         # get input
@@ -61,19 +63,23 @@ class LoginScreen(ScreenBase):
         # validate input
         response = validate_input_login(try_usr, try_pw)
         if response != InputResponse.SUCCESS:
-            self.give_failure_feedback(response)
+            self.give_input_feedback(response)
             return
 
-        # query db via action handler #? should i hash input here instead of action handler?
+        # query db via action handler
         print(f"trying login with valid input, usr: {try_usr}, pw: {try_pw}")
-        if not self.root_gui.action_handler_ref.try_login_user(try_usr, try_pw):
-            # @TODO handle input valid but no user found / accessible
+        maybe_user = self.root_gui.action_handler_ref.try_login_user(try_usr, try_pw)
+        if not maybe_user:
+            self.give_input_feedback(InputResponse.USR_NOTFOUND)
             return
-
+        # SUCCESS: verification was good
+        else:
+            self.give_input_feedback(InputResponse.SUCCESS)
+            self.root_gui.on_login(maybe_user)
 
     def try_register(self) -> None:
         """Swap panel OR Check input, then pass validated and hashed input to action handler
-        On faiklure: give failure response feebback."""
+        On failure: give appropriate input response feebback."""
         if self.update_screen(PanelState.REGISTER): return
 
         # get input
@@ -84,15 +90,16 @@ class LoginScreen(ScreenBase):
 
         # validate input
         response = validate_input_register(try_email, try_usr, try_pw, try_pw2)
+        self.give_input_feedback(response)
         if response != InputResponse.SUCCESS:
-            self.give_failure_feedback(response)
             return
 
         # everything is checked, create new user and send email (email service is out of scope)
         print(f"trying register with valid input, email: {try_email}, usr: {try_usr}, pw: {try_pw}, pw2: {try_pw2}")
-        if not self.root_gui.action_handler_ref.try_register_user(try_email, try_usr, try_pw2, try_pw2):
-            # @TODOs call action handle create register function
-            return
+        if self.root_gui.action_handler_ref.try_register_user(try_usr, try_email, try_pw):
+            self.give_input_feedback(InputResponse.SUCCESS)
+        else:
+            self.give_input_feedback(InputResponse.DEFAULT)
 
     #* **************************************** GUI / feedback functionality ****************************************
     def update_screen(self, to_panel:PanelState) -> bool:
@@ -117,13 +124,21 @@ class LoginScreen(ScreenBase):
             self.password2_entry.grid()
 
         # remove fail feedback when changing screens
-        self.failmsg_label.config(text="")
+        self.inputfeedback_label.config(text="")
 
         return True
 
-    def give_failure_feedback(self, fail_reason:InputResponse) -> None:
-        """sets the text of 'failmsg_lbael' element according to the received response
-        @param fail_reason: response enum, value of Enum will determine text"""
-        self.failmsg_label.config(text=fail_reason.value)
-        print(f"fail response: {fail_reason.value}")
-        # @TODO could add some fancy stuff here, e.g. 'switch statement' that marks relevant widgets red, etc.
+    def give_input_feedback(self, response:InputResponse) -> None:
+        """Sets the text of 'inputfeedback_label' element according to the received response.
+        That text/label is initially empty (and thus hidden)
+
+        Args:
+            response (InputResponse): response enum, value of Enum will determine displayedtext
+        """
+        self.inputfeedback_label.config(text=response.value)
+        if response == InputResponse.SUCCESS:
+            self.inputfeedback_label.config(fg="green")
+        else:
+            self.inputfeedback_label.config(fg="red")
+            # @TODO could add some fancy stuff here, e.g. 'switch statement' that marks relevant widgets red, etc.
+        print(f"input response: {response.value}")
