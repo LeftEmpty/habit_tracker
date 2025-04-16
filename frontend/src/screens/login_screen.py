@@ -1,15 +1,13 @@
 import tkinter as tk
-import hashlib
-from frontend.src.lib.gui_enums import PanelState, InputResponse
 from frontend.src.screens.screen import ScreenBase
 from util.src.validators import validate_input_login, validate_input_register
-
+from util.src.gui_enums import PanelState, InputResponse
 
 class LoginScreen(ScreenBase):
     #* **************************************** overwriting base class functionality ****************************************
     def __init__(self, root_gui) -> None:
         """@TODO docstring for class"""
-        self.cur_panel = PanelState.LOGIN
+        self.cur_panel = None
         super().__init__(root_gui)
 
     def setup_screen(self) -> None:
@@ -44,7 +42,7 @@ class LoginScreen(ScreenBase):
         self.failmsg_label.grid(row=6, column=0, columnspan=3, pady=8)
 
         # Updatee Layout to reflect current panel state (init LOGIN)
-        self.update_screen(self.cur_panel)
+        self.update_screen(PanelState.LOGIN)
 
         # debug / info
         print("login screen setup completed")
@@ -54,7 +52,7 @@ class LoginScreen(ScreenBase):
     def try_login(self) -> None:
         """Swap panel OR Check input, then pass validated and hashed input to action handler
         On faiklure: give failure response feebback"""
-        self.update_screen(PanelState.LOGIN)
+        if self.update_screen(PanelState.LOGIN): return
 
         # get input
         try_usr:str = str(self.username_entry.get())
@@ -76,7 +74,7 @@ class LoginScreen(ScreenBase):
     def try_register(self) -> None:
         """Swap panel OR Check input, then pass validated and hashed input to action handler
         On faiklure: give failure response feebback."""
-        self.update_screen(PanelState.REGISTER)
+        if self.update_screen(PanelState.REGISTER): return
 
         # get input
         try_email:str = str(self.email_entry.get())
@@ -97,10 +95,10 @@ class LoginScreen(ScreenBase):
             return
 
     #* **************************************** GUI / feedback functionality ****************************************
-    def update_screen(self, to_panel:PanelState) -> None:
+    def update_screen(self, to_panel:PanelState) -> bool:
         """updates panel on LoginScreen, but only if necessary
         @param to_panel: new panel that screen should update to"""
-        if self.cur_panel == to_panel: return
+        if self.cur_panel == to_panel: return False
         self.cur_panel = to_panel
 
         # adjust layout
@@ -120,6 +118,8 @@ class LoginScreen(ScreenBase):
 
         # remove fail feedback when changing screens
         self.failmsg_label.config(text="")
+
+        return True
 
     def give_failure_feedback(self, fail_reason:InputResponse) -> None:
         """sets the text of 'failmsg_lbael' element according to the received response
