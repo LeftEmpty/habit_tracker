@@ -90,21 +90,28 @@ def db_get_user_by_id(user_id: int, conn: Connection = Connection.FILE) -> list:
         cx.close()
     
 
-def db_delete_user(user_id: int, conn: Connection = Connection.FILE) -> None:
-    cx = sqlite3.connect(conn.value)
-
+def db_delete_user(user_id: int, conn: Connection = Connection.FILE) -> bool:
+    cx: sqlite3.Connection = sqlite3.connect(conn.value)
+    log.info(f"Attempting to delete user with ID of {user_id}")
+    cu: sqlite3.Cursor = cx.cursor()
     try:
-        result= cx.execute(
+        cu: sqlite3.Cursor = cu.execute(
             """
             DELETE FROM user WHERE user_id  = ?
             """,
-            str(user_id)
+            (user_id,)
         )
     except sqlite3.Error as e:
         log.error(f"Error deleting user with ID of {user_id}: {e}")
+        return False
     finally:
         cx.commit()
         cx.close()
+        if cu.rowcount == 0:
+            return False
+        else:  
+            log.info("User deleted successfully")
+            return True
 
 
 

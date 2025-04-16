@@ -128,5 +128,22 @@ class TestGetUserByCredentialsFail(unittest.TestCase):
         user = con.db_get_userid_by_credentials("nonexistentuser", "wrongpassword", file)
         self.assertEqual(-1, user)
 
+
+class TestDeleteUserFail(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        os.remove("test.sqlite") if os.path.exists("test.sqlite") else None
+        con.db_init_db(file)
+
+    def test_delete_user_fail(self):
+        con.db_create_user("testuser", "user1", "test@example.com", "password", file)
+        result = con.db_delete_user(999, file)
+        self.assertFalse(result)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        os.remove("test.sqlite") if os.path.exists("test.sqlite") else None
+
+
 if __name__ == '__main__':
     unittest.main()
