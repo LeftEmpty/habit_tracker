@@ -1,7 +1,7 @@
 from sqlite_rx.client import SQLiteClient
 from sqlite_rx.server import SQLiteServer
 
-from util.src.data_classes import User#, Habit
+import sqlite3
 
 from db.src.table_definitions.completions import completions
 from db.src.table_definitions.habit_list import habit_list
@@ -131,7 +131,7 @@ class Database:
 
     #* ********************************** Habit querries **********************************
 
-    def db_create_habit(self, habit_name: str, habit_description: str, frequency: int, timeframe: str) -> bool: 
+    def db_create_habit(self, habit_name: str, habit_description: str, frequency: int, timeframe: str) -> bool:
         result = self.client.execute(
             """
             INSERT INTO habit (name, description, frequency, timeframe)
@@ -143,3 +143,23 @@ class Database:
 
 
     # @TODO db_delete_habit
+
+def get_db(name:str="main.gb"):
+    return sqlite3.connect(name)
+
+
+def get_user_by_login(usr:str, pw:str):
+    return get_db().execute(
+        """
+        SELECT * FROM user WHERE AND username = ? AND password = ?
+        """,
+        (usr, pw)
+    )
+
+def get_user_by_id(user_id:int):
+    return get_db().execute(
+        """
+        SELECT * FROM user WHERE user_id = ?
+        """,
+        (str(user_id))
+    ).fetchall()
