@@ -12,33 +12,7 @@ class Connection(Enum):
     TEST = "test.sqlite"
     FILE = "db.sqlite"
 
-
-def db_get_userid_by_credentials(username: str, password: str, conn: Connection = Connection.FILE) -> int:
-    """Query the db for a user login with the provided credentials.
-
-    Args:
-        username (str): username for the user
-        password (str): password of the user
-
-    Returns:
-        int: user_id if successful. -1 for not found user.
-    """    
-    cx = sqlite3.connect(conn.value)
-    result = cx.execute(
-    """
-    SELECT user_id FROM user WHERE username = ? AND password = ?
-    """,
-    (username, password)
-    )
-    
-    result = result.fetchall()
-    cx.close()
-    if len(result) == 0 or not result:
-        log.info(f"User for {username} not found")
-        return -1
-    else: 
-        return result[0][0]
-    
+#--------------------------------------------- USER ---------------------------------------------
 
 def db_create_user(display_name: str, username: str, email: str, password: str, conn: Connection = Connection.FILE) -> bool:
     """Create a new user in the Database with the given credentials.
@@ -46,7 +20,7 @@ def db_create_user(display_name: str, username: str, email: str, password: str, 
         display_name (str): Name to be displayed in the GUI elements
         username (str): internal username for login and db (Unique)
         password (str): password of the new user
-    """    
+    """
 
     cx = sqlite3.connect(conn.value)
     try:
@@ -64,31 +38,6 @@ def db_create_user(display_name: str, username: str, email: str, password: str, 
     finally:
         cx.commit()
         cx.close()
-
-
-def db_get_user_by_id(user_id: int, conn: Connection = Connection.FILE) -> list:
-    """Get a user by their ID.
-    Args:
-        user_id (int): The ID of the user to retrieve.
-    Returns:
-        list: A list containing the user's information, or an empty list if no user is found.
-    """    
-    cx = sqlite3.connect(conn.value)
-    try:
-        result = cx.execute(
-            """
-            SELECT * FROM user WHERE user_id = ?
-            """,
-            (user_id,)
-        )
-    
-        return result.fetchall()
-    except sqlite3.Error as e:
-        log.error(f"Error retrieving user by ID of {user_id}: {e}")
-        return []
-    finally:
-        cx.close()
-    
 
 def db_delete_user(user_id: int, conn: Connection = Connection.FILE) -> bool:
     cx: sqlite3.Connection = sqlite3.connect(conn.value)
@@ -109,13 +58,61 @@ def db_delete_user(user_id: int, conn: Connection = Connection.FILE) -> bool:
         cx.close()
         if cu.rowcount == 0:
             return False
-        else:  
+        else:
             log.info("User deleted successfully")
             return True
 
+def db_get_user_by_id(user_id: int, conn: Connection = Connection.FILE) -> list:
+    """Get a user by their ID.
+    Args:
+        user_id (int): The ID of the user to retrieve.
+    Returns:
+        list: A list containing the user's information, or an empty list if no user is found.
+    """
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+            """
+            SELECT * FROM user WHERE user_id = ?
+            """,
+            (user_id,)
+        )
+
+        return result.fetchall()
+    except sqlite3.Error as e:
+        log.error(f"Error retrieving user by ID of {user_id}: {e}")
+        return []
+    finally:
+        cx.close()
+
+def db_get_userid_by_credentials(username: str, password: str, conn: Connection = Connection.FILE) -> int:
+    """Query the db for a user login with the provided credentials.
+
+    Args:
+        username (str): username for the user
+        password (str): password of the user
+
+    Returns:
+        int: user_id if successful. -1 for not found user.
+    """
+    cx = sqlite3.connect(conn.value)
+    result = cx.execute(
+    """
+    SELECT user_id FROM user WHERE username = ? AND password = ?
+    """,
+    (username, password)
+    )
+
+    result = result.fetchall()
+    cx.close()
+    if len(result) == 0 or not result:
+        log.info(f"User for {username} not found")
+        return -1
+    else:
+        return result[0][0]
 
 
-#---------------------------------------------HABIT---------------------------------------------
+#--------------------------------------------- HABIT ---------------------------------------------
 
 def db_create_habit(user_id: int, habit_name: str, habit_description: str = "", public: bool = False, conn: Connection = Connection.FILE) -> None:
     cx = sqlite3.connect(conn.value)
@@ -129,24 +126,6 @@ def db_create_habit(user_id: int, habit_name: str, habit_description: str = "", 
     )
     except sqlite3.Error as e:
         log.error(f"Error creating habit {habit_name} {habit_description}: {e}")
-    finally:
-        cx.commit()
-        cx.close()
-
-
-def db_get_habit_by_id(habit_id: int, conn: Connection = Connection.FILE) -> list:
-    cx = sqlite3.connect(conn.value)
-    try:
-        result = cx.execute(
-        """
-        SELECT * FROM habit_data WHERE habit_id = ?
-        """,
-        str(habit_id)
-    )
-        return result.fetchall()
-    except sqlite3.Error as e:
-        log.error(f"Error getting habit with ID of {habit_id}: {e}")
-        return []
     finally:
         cx.commit()
         cx.close()
@@ -170,7 +149,7 @@ def db_delete_habit(habit_id: int, conn: Connection = Connection.FILE) -> bool:
         cx.close()
         if cu.rowcount == 0:
             return False
-        else:  
+        else:
             log.info("Habit deleted successfully")
             return True
 
@@ -191,10 +170,27 @@ def db_modify_habit(habit_id: int, new_name: str, new_description: str = "", pub
         cx.close()
         return True
 
+def db_get_habit_by_id(habit_id: int, conn: Connection = Connection.FILE) -> list:
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+        """
+        SELECT * FROM habit_data WHERE habit_id = ?
+        """,
+        str(habit_id)
+    )
+        return result.fetchall()
+    except sqlite3.Error as e:
+        log.error(f"Error getting habit with ID of {habit_id}: {e}")
+        return []
+    finally:
+        cx.commit()
+        cx.close()
 
-#---------------------------------------------DB INIT---------------------------------------------
+
+#--------------------------------------------- DB INIT ---------------------------------------------
 def db_init_db(conn: Connection = Connection.FILE) -> None:
-    
+
     for i in get_all_table_defs():
         try:
             cx = sqlite3.connect(conn.value)
@@ -202,5 +198,3 @@ def db_init_db(conn: Connection = Connection.FILE) -> None:
             cx.execute(i)
         except sqlite3.Error as e:
             log.error(f"Error creating table {i}: {e}")
-
-    
