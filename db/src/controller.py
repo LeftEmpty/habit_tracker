@@ -90,21 +90,28 @@ def db_get_user_by_id(user_id: int, conn: Connection = Connection.FILE) -> list:
         cx.close()
     
 
-def db_delete_user(user_id: int, conn: Connection = Connection.FILE) -> None:
-    cx = sqlite3.connect(conn.value)
-
+def db_delete_user(user_id: int, conn: Connection = Connection.FILE) -> bool:
+    cx: sqlite3.Connection = sqlite3.connect(conn.value)
+    log.info(f"Attempting to delete user with ID of {user_id}")
+    cu: sqlite3.Cursor = cx.cursor()
     try:
-        result= cx.execute(
+        cu: sqlite3.Cursor = cu.execute(
             """
             DELETE FROM user WHERE user_id  = ?
             """,
-            str(user_id)
+            (user_id,)
         )
     except sqlite3.Error as e:
         log.error(f"Error deleting user with ID of {user_id}: {e}")
+        return False
     finally:
         cx.commit()
         cx.close()
+        if cu.rowcount == 0:
+            return False
+        else:  
+            log.info("User deleted successfully")
+            return True
 
 
 
@@ -144,35 +151,45 @@ def db_get_habit_by_id(habit_id: int, conn: Connection = Connection.FILE) -> lis
         cx.commit()
         cx.close()
 
-def db_delete_habit(habit_id: int, conn: Connection = Connection.FILE) -> None:
+def db_delete_habit(habit_id: int, conn: Connection = Connection.FILE) -> bool:
     cx = sqlite3.connect(conn.value)
+    log.info(f"Attempting to delete habit with ID of {habit_id}")
+    cu = cx.cursor()
     try:
-        result = cx.execute(
+        cu = cx.execute(
         """
-        DELETE FROM habit WHERE habit_id = ?
+        DELETE FROM habit_data WHERE habit_id = ?
         """,
-        str(habit_id)
+        (habit_id,)
     )
     except sqlite3.Error as e:
         log.error(f"Error deleting habit with ID of {habit_id}: {e}")
+        return False
     finally:
         cx.commit()
         cx.close()
+        if cu.rowcount == 0:
+            return False
+        else:  
+            log.info("Habit deleted successfully")
+            return True
 
-def db_modify_habit(habit_id: int, new_name: str, new_description: str = "", public: bool = False, conn: Connection = Connection.FILE) -> None:
+def db_modify_habit(habit_id: int, new_name: str, new_description: str = "", public: bool = False, conn: Connection = Connection.FILE) -> bool:
     cx = sqlite3.connect(conn.value)
     try:
         result = cx.execute(
             """
             UPDATE habit SET name = ?, description = ?, public = ? WHERE habit_id = ?
             """,
-            (new_name, new_description, public, str(habit_id))
+            (new_name, new_description, public, habit_id)
         )
     except sqlite3.Error as e:
         log.error(f"Error modifying habit with ID of {habit_id}: {e}")
+        return False
     finally:
         cx.commit()
         cx.close()
+        return True
 
 
 #---------------------------------------------DB INIT---------------------------------------------
