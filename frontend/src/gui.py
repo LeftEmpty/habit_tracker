@@ -18,7 +18,7 @@ class GUI:
         self.root = tk.Tk()
 
         self.root.title("HabitTracker")
-        self.root.geometry("720x480")
+        self.root.geometry("1280x720")
         self.root.config(bg='#000', padx=12, pady=12)
 
         self.action_handler_ref = action_handler
