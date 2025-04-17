@@ -74,6 +74,8 @@ class HabitSubscription:
 
         self.is_completed = self.get_completed_state()
 
+    def __bool__(self) -> bool:
+        return self.habit_sub_id is not None
 
     def get_completed_state(self) -> bool:
         """Check if the last completion of this habit (that is due today)
