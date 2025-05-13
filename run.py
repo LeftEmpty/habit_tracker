@@ -1,25 +1,22 @@
-from cli.src.start import start as start_cli
-import subprocess
-import atexit
+from gui.src.gui import GUI
+import db.src.controller as dbc
+# import atexit
+from datetime import date
 
 def main() -> None:
 
-    # Start the SQLite server in a separate process with logging
-    with open("db_handler.log", "w") as log_file:
-        # Run the script as a subprocess
-        subprocess.Popen(
-            ["python3", "-u", "db/src/start.py"],  
-            stdout=log_file,                
-            stderr=subprocess.STDOUT
-        )
-    
-    atexit.register(
-        lambda: subprocess.call(["pkill", "-f", "db/src/start.py"])
-    )
+    dbc.db_init()
+    # dbc.db_populate()
 
+    print(date.today)
 
-    start_cli()
+    # atexit.register(cleanup)
 
+    gui = GUI()
+    gui.__start__() # starts mainloop
 
 if __name__ == "__main__":
     main()
+
+def cleanup() -> None:
+    pass
