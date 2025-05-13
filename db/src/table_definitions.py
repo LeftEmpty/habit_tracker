@@ -5,33 +5,35 @@ User: str = """
     CREATE TABLE IF NOT EXISTS user (
         user_id INTEGER PRIMARY KEY AUTOINCREMENT,
         display_name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
         username TEXT NOT NULL UNIQUE,
+        email TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL
     )"""
 
 HabitData: str = """
     CREATE TABLE IF NOT EXISTS habit_data(
-        habit_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        habit_data_id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         description TEXT,
+        author_name TEXT NOT NULL,
+        author_user_id INTEGER NOT NULL,
         public BOOLEAN DEFAULT FALSE,
-        user_id INTEGER NOT NULL,
-        FOREIGN KEY(user_id) REFERENCES user(user_id)
+        official BOOLEAN DEFAULT FALSE,
+        FOREIGN KEY(author_user_id) REFERENCES user(user_id)
     )"""
 
 HabitSubscription: str = """
     CREATE TABLE IF NOT EXISTS habit_subscription (
         habit_sub_id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
-        habit_id INTEGER NOT NULL,
-        start_date TEXT NOT NULL,
-        latest_date TEXT NOT NULL,
-        periodicty TEXT NOT NULL,
+        data_id INTEGER NOT NULL,
+        periodicity TEXT NOT NULL,
         cur_streak INTEGER NOT NULL,
         max_streak INTEGER NOT NULL,
+        creation_date TEXT NOT NULL,
+        latest_date TEXT,
         FOREIGN KEY(user_id) REFERENCES User(user_id) ON DELETE CASCADE,
-        FOREIGN KEY(habit_id) REFERENCES HabitData(habit_id)
+        FOREIGN KEY(data_id) REFERENCES HabitData(habit_data_id)
     )"""
 
 Completions: str = """

@@ -1,19 +1,18 @@
-import tkinter as tk
-from frontend.src.gui import GUI
+from gui.src.gui import GUI
 import db.src.controller as dbc
-from util.src.action_handler import ActionHandler
-import atexit
+# import atexit
+from datetime import date
 
 def main() -> None:
 
-    # Start the SQLite server in a separate process with logging
+    dbc.db_init()
+    # dbc.db_populate()
 
-    dbc.db_init_db()
+    print(date.today)
 
-    #atexit.register(cleanup)
+    # atexit.register(cleanup)
 
-    action_handler = ActionHandler()
-    gui = GUI(action_handler)
+    gui = GUI()
     gui.__start__() # starts mainloop
 
 if __name__ == "__main__":
@@ -21,4 +20,3 @@ if __name__ == "__main__":
 
 def cleanup() -> None:
     pass
-
