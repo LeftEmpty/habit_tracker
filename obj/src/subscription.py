@@ -136,7 +136,7 @@ class HabitSubscription:
     def get_completed_state(self) -> bool:
         """'Algorithm' to figure out if the subscription has been completed,
         according to the habits periodicity."""
-        today = date.today()
+        today:date = date.today()
 
         weekday_map = {
             Periodicity.MONDAY: 0,
@@ -145,7 +145,7 @@ class HabitSubscription:
             Periodicity.THURSDAY: 3,
             Periodicity.FRIDAY: 4,
             Periodicity.SATURDAY: 5,
-            Periodicity.SUNDAY: 6,
+            Periodicity.SUNDAY: 6
         }
 
         if self.periodicity == Periodicity.DAILY:
@@ -162,38 +162,7 @@ class HabitSubscription:
         completions = self.get_completions_for_period(start_date, today)
         return len(completions) > 0
 
-    def get_completed_state_old(self) -> bool:
-        """Check if the last completion of this habit - that is due today -
-        already happened within the period that was allocated to it.
-        used to for example draw habit-widget as 'checked-off' in gui
-
-        Raises:
-            ValueError: May raise a ValueError if current periodicity is invalid
-
-        Returns:
-            bool: True if already completed
-        """
-        today = date.today()
-        weekday_map = {
-            Periodicity.MONDAY: 0,
-            Periodicity.TUESDAY: 1,
-            Periodicity.WEDNESDAY: 2,
-            Periodicity.THURSDAY: 3,
-            Periodicity.FRIDAY: 4,
-            Periodicity.SATURDAY: 5,
-            Periodicity.SUNDAY: 6,
-        }
-        # every wednesday / daily -> have we completed it today?
-        if self.periodicity == Periodicity.DAILY or self.periodicity in weekday_map:
-            end_date = today
-        # weekly -> have we completed it since monday? #// weekly -> did we complete at any time during the last 7 days
-        elif self.periodicity == Periodicity.WEEKLY:
-            end_date = today - timedelta(days=((today.weekday() - weekday_map[self.periodicity]) % 7)) # gets date of current week's monday
-        else:
-            raise ValueError(f"Unsupported periodicity: {self.periodicity}")
-        return not len(self.get_completions_for_period(today, end_date)) > 0
-
-    def add_completion_event(self, date:date = date.today()) -> None:
+    def add_completion_event(self, date:date=date.today()) -> None:
         """Add a completion entry for this user & subscription
 
         Args:
@@ -203,6 +172,9 @@ class HabitSubscription:
         # CompletionEvent()
         # @TODO might be good to let user's properly un-check / 'un-complete' their habits - delete completion entry & reset locally
 
+    def remove_completion_event(self) -> None:
+        """Should only ever be used to 'uncheck' a habit."""
+        pass
 
     def get_completions_for_period(self, start_date:date, end_date:date) -> list[Completion]:
         """returns all completion events for the given habit_subscription"""
@@ -211,5 +183,14 @@ class HabitSubscription:
 
     def on_cancel_subscription(self) -> None:
         """Event that should be called when a user cancels this subscription,
-        when the user was the last subscriber to the used habit, then also delete that habit (only unofficial)"""
-        pass
+        When the user was the last subscriber to the used habit (data), then also delete that habit (only unofficial)"""
+        if (not self.habit_data.b_public) or (self.habit_data.get_subscriber_count() <= 1 and not self.habit_data.b_official):
+            request.delete_habit_data(self.data_id)
+        request.delete_habit_sub(self.id)
+        #del self
+
+    def modify_sub(self, periodicty:Periodicity|str) -> None:
+        """modifies this subs data & modifies entry in db"""
+        p = self._normalize_periodicity(periodicty)
+        self.periodicity = p
+        request.modify_sub_periodicty(self.id, p.value)

@@ -33,7 +33,7 @@ class User:
     def __bool__(self):
         return self.user_id is not None and self.user_id >= 0
 
-    def get_subscribed_habits(self, cond:HabitQuerryCondition) -> list[HabitSubscription]:
+    def get_subscribed_habits(self, cond:HabitQuerryCondition=HabitQuerryCondition.ALL) -> list[HabitSubscription]:
         """_summary_
 
         Args:
@@ -58,3 +58,6 @@ class User:
                 if not s.get_completed_state():
                     subs.remove(s)
         return subs
+
+    def update_subscribed_habits(self) -> None:
+        self.habit_subs = self.get_subscribed_habits(HabitQuerryCondition.ALL)

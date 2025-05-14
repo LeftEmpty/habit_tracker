@@ -19,6 +19,7 @@ HabitData: str = """
         author_user_id INTEGER NOT NULL,
         public BOOLEAN DEFAULT FALSE,
         official BOOLEAN DEFAULT FALSE,
+        last_modified TEXT,
         FOREIGN KEY(author_user_id) REFERENCES user(user_id)
     )"""
 

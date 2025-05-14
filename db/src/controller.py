@@ -140,7 +140,7 @@ def db_get_userid_by_credentials(username:str, password:str, conn:Connection=Con
 
 
 #* ********************************************* HABIT *********************************************
-def db_create_habit_data(author_user_id:int, author_display_name:str, habit_name:str, habit_desc:str, b_public:bool, b_official:bool, conn:Connection=Connection.FILE) -> int:
+def db_create_habit_data(author_user_id:int, author_display_name:str, habit_name:str, habit_desc:str, b_public:bool, b_official:bool, last_modified:str="", conn:Connection=Connection.FILE) -> int:
     """Create a habit data entry.
 
     Returns:
@@ -149,10 +149,10 @@ def db_create_habit_data(author_user_id:int, author_display_name:str, habit_name
     try:
         result = cx.execute(
             """
-            INSERT INTO habit_data (name, description, author_name, author_user_id, public, official)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO habit_data (name, description, author_name, author_user_id, public, official, last_modified)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-            (habit_name, habit_desc, author_display_name, author_user_id, b_public, b_official)
+            (habit_name, habit_desc, author_display_name, author_user_id, b_public, b_official, last_modified)
         )
         if result.lastrowid:
             return result.lastrowid
@@ -189,22 +189,23 @@ def db_delete_habit_data(data_id:int, conn:Connection=Connection.FILE) -> bool:
             log.info("Habit deleted successfully")
             return True
 
-def db_modify_habit_data(data_id:int, new_name:str, new_description:str="", public:bool=False, conn:Connection=Connection.FILE) -> bool:
+def db_modify_habit_data(data_id:int, new_name:str, new_description:str, public:bool, last_modified:str, conn:Connection=Connection.FILE) -> bool:
     cx = sqlite3.connect(conn.value)
     try:
         result = cx.execute(
             """
-            UPDATE habit SET name = ?, description = ?, public = ? WHERE data_id = ?
+            UPDATE habit_data SET name = ?, description = ?, public = ?, last_modified = ? WHERE habit_data_id = ?
             """,
-            (new_name, new_description, public, data_id)
+            (new_name, new_description, public, last_modified, data_id)
         )
+        log.info(f"Successfully modified habit with ID {data_id}")
+        return True
     except sqlite3.Error as e:
-        log.error(f"Error modifying habit with ID of {data_id}: {e}")
+        log.error(f"Failed to modify habit with ID {data_id}: {e}")
         return False
     finally:
         cx.commit()
         cx.close()
-        return True
 
 def db_get_habit_data_by_id(data_id:int, conn:Connection = Connection.FILE) -> list:
     cx = sqlite3.connect(conn.value)
@@ -302,6 +303,41 @@ def db_create_habit_sub(owner_user_id:int, habit_data_id:int, creation_date:str,
     except sqlite3.Error as e:
         log.error(f"Error creating sub for habit with id {habit_data_id} on user with id {owner_user_id}: {e}")
         return -1
+    finally:
+        cx.commit()
+        cx.close()
+
+def db_delete_habit_sub(sub_id:int, conn:Connection=Connection.FILE) -> bool:
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+            """
+            DELETE FROM habit_subscription WHERE habit_sub_id  = ?
+            """,
+            (sub_id,)
+        )
+        log.info(f"Subscription deleted successfully, ID: {sub_id}")
+        return True
+    except sqlite3.Error as e:
+        log.error(f"Error deleting subscription with ID of {sub_id}: {e}")
+        return False
+    finally:
+        cx.commit()
+        cx.close()
+
+def db_modifiy_sub(sub_id:int, periodicity:str, conn:Connection=Connection.FILE) -> bool:
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+            """
+            UPDATE habit_subscription SET periodicty = ? WHERE habit_sub_id = ?
+            """,
+            (periodicity, sub_id)
+        )
+        return True
+    except sqlite3.Error as e:
+        log.error(f"Failed to modify habit subscription wiht ID {sub_id}")
+        return False
     finally:
         cx.commit()
         cx.close()

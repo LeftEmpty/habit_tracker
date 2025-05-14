@@ -94,6 +94,16 @@ class ThemeManager:
             padding=4
         )
 
+        # Checkbox
+        self.style.configure("TCheckbutton",
+            background=bg_dark,
+            relief="flat",
+            padding=2,
+        )
+        self.style.map("TCheckbutton",
+            background=[('active', bg_dark), ('disabled', '#f4f4f4')],
+        )
+
     def _set_light_theme(self):
         #? necessary when implementing theme switcher, but obviously out of scope
         pass

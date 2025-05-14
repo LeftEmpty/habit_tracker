@@ -44,7 +44,7 @@ def try_login_user(try_usr:str, try_pw:str, gui:"GUI") -> InputResponse:
     if len(result) <= 0:
         return InputResponse.USR_NOTFOUND
 
-    # local import to avoid circular import # @TODO
+    # local import to avoid circular import # @TODO i dont like it
     from obj.src.user import User
     user = User(
         user_id=result[0][0],
@@ -122,13 +122,17 @@ def create_new_habit_via_obj(data:"HabitData") -> int:
         int: ID of the created habit data entry
     """
     return dbc.db_create_habit_data(
-        data.author_id,
-        data.author_name,
-        data.name,
-        data.desc,
-        data.b_public,
-        data.b_official
+        author_user_id=data.author_id,
+        author_display_name=data.author_name,
+        habit_name=data.name,
+        habit_desc=data.desc,
+        b_public=data.b_public,
+        b_official=data.b_official,
+        #last_modified=str(date.today())
     )
+
+def modify_habit_data(habit:"HabitData") -> None:
+    dbc.db_modify_habit_data(habit.id, habit.name, habit.desc, habit.b_public, str(habit.last_modified))
 
 def get_habit_data(data_id:int) -> Optional["HabitData"]:
     """_summary_
@@ -144,7 +148,7 @@ def get_habit_data(data_id:int) -> Optional["HabitData"]:
     result = dbc.db_get_habit_data_by_id(data_id)
     if len(result) <= 0: return None
 
-    # local import to avoid circular import # @TODO
+    # local import to avoid circular import # @TODO i dont like it
     from obj.src.habit import HabitData
     return HabitData(
         name=result[0][1],
@@ -183,6 +187,18 @@ def create_new_sub_for_user(user_id:int, sub:HabitSubscription) -> int:
         sub.max_streak
     )
     return id
+
+def delete_habit_sub(sub_id:int) -> bool:
+    return dbc.db_delete_habit_sub(sub_id)
+
+def delete_habit_data(data_id:int) -> bool:
+    return dbc.db_delete_habit_data(data_id)
+
+def modify_sub_periodicty(sub_id:int, new_periodicity:str) -> bool:
+    """modifies periodicty of subscription db entry."""
+    if sub_id < 0 or new_periodicity == "":
+        return False
+    return dbc.db_modifiy_sub(sub_id, new_periodicity)
 
 def get_subs_for_user(user_id:int, user_displayname:str="") -> list[HabitSubscription]:
     """Uses dbc to query a habit subscription according to condition,

@@ -1,10 +1,9 @@
 from datetime import date, timedelta
 
-import db.src.controller as dbc
 import obj.util.request_handler as request
 
 # forward declaring for better overview
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from obj.src.user import User
 
@@ -28,7 +27,7 @@ class HabitData:
         self.author_id:int = author_id
         self.b_public:bool = b_public
         self.b_official:bool = b_official
-        self.last_updated:date = date.today()
+        # self.last_modified:date = date.today()
 
         if author_name != "":
             self.author_name:str = author_name
@@ -41,11 +40,12 @@ class HabitData:
     def __bool__(self) -> bool:
         return self.id is not None and self.id >= 0
 
-    def update_data(self, new_name:str, new_desc:str, b_public:bool) -> None:
+    def modify_data(self, new_name:str, new_desc:str, b_public:bool) -> None:
         self.name = new_name
         self.desc = new_desc
         self.b_public = b_public
-        self.last_updated = date.today()
+        self.last_modified = date.today()
+        request.modify_habit_data(self)
 
     def is_registered(self) -> bool:
         """Returns true if habit has been registered properly, i.e. if this object reflects an entry in DB.
@@ -77,6 +77,7 @@ class HabitData:
             print(f"Habit \"{self.name}\" registered self to database.")
             return new_id
         else:
+            print(f"Error: Habit couldnt register \"{self.name}\" self to database.")
             return -1
 
     def is_complete(self) -> bool:
