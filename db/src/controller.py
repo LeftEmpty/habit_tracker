@@ -5,17 +5,19 @@ from enum import Enum
 sys.path.append(os.path.abspath("."))
 
 from db.util.logger import log
-from db.util.populate_debug_data import populate_all as populate_dummy_data
+# from db.util.populate_debug_data import populate_all as populate_dummy_data
 from db.src.table_definitions import get_all_table_defs
 
 
 class Connection(Enum):
+    """Idea is to have the possibility of running tests on a different db connection as to not touch the run environment.
+    This is however not yet implemented @TODO"""
     TEST = "test.sqlite"
     FILE = "db.sqlite"
 
 
 #* ********************************************* DB INIT *********************************************
-def db_init(conn: Connection = Connection.FILE) -> None:
+def db_init(b_debug:bool=False, conn: Connection = Connection.FILE) -> None:
     """Initializes the database connection
 
     Args:
@@ -29,9 +31,8 @@ def db_init(conn: Connection = Connection.FILE) -> None:
         except sqlite3.Error as e:
             log.error(f"Error creating table {table}: {e}")
 
-def db_populate_dummy_data() -> None:
-    populate_dummy_data()
-
+    if b_debug:
+        print("[DEBUG MODE] Populating database with dummy data...")
 
 #* ********************************************* USER *********************************************
 def db_create_user(display_name:str, username:str, email:str, password:str, conn:Connection=Connection.FILE) -> bool:
@@ -354,6 +355,116 @@ def db_get_subs_for_user(user_id:int, conn:Connection=Connection.FILE) -> list:
         return result.fetchall()
     except sqlite3.Error as e:
         log.error(f"Error getting subscriptions from user with ID of {user_id}: {e}")
+        return []
+    finally:
+        cx.commit()
+        cx.close()
+
+#* ********************************************* COMPLETIONS *********************************************
+# Completions: str = """
+#     CREATE TABLE IF NOT EXISTS completion (
+#         date TEXT NOT NULL,
+#         user_id INTEGER NOT NULL,
+#         habit_sub_id INTEGER NOT NULL,
+#         FOREIGN KEY(user_id) REFERENCES User(user_id),
+#         FOREIGN KEY(habit_sub_id) REFERENCES HabitSubscription(habit_sub_id)
+#     )"""
+
+def db_create_completion(date:str, user_id:int, habit_sub_id:int, conn:Connection=Connection.FILE) -> bool:
+    """Create a completion for a subscription.
+
+    Returns:
+        int:ID of completion entry"""
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+            """
+            INSERT INTO completion (date, user_id, habit_sub_id)
+            VALUES (?, ?, ?)
+            """,
+            (date, user_id, habit_sub_id)
+        )
+        return True
+    except sqlite3.Error as e:
+        log.error(f"Error creating completion for subscription with id {habit_sub_id} on user with id {user_id}: {e}")
+        return False
+    finally:
+        cx.commit()
+        cx.close()
+
+def db_delete_completion(user_id:int, habit_sub_id:int, date:str="", b_all:bool=False, conn:Connection=Connection.FILE) -> bool:
+    cx = sqlite3.connect(conn.value)
+    try:
+        if b_all:
+            result = cx.execute(
+                """
+                DELETE FROM completion WHERE user_id = ? AND habit_sub_id = ?
+                """,
+                (user_id, habit_sub_id)
+            )
+            log.info(f"Successfully deleted ALL completions with user ID: {user_id} and sub ID: {habit_sub_id}")
+        else:
+            result = cx.execute(
+                """
+                DELETE FROM completion WHERE date = ? AND user_id = ? AND habit_sub_id = ?
+                """,
+                (date, user_id, habit_sub_id)
+            )
+            log.info(f"Successfully deleted completion with user ID: {user_id} and sub ID: {habit_sub_id} on date: {date}")
+        return True
+    except sqlite3.Error as e:
+        log.error(f"Failed to delete completion with user ID {user_id} and sub ID {habit_sub_id}: {e}")
+        return False
+    finally:
+        cx.commit()
+        cx.close()
+
+def db_get_all_sub_completions_for_user(user_id:int, sub_id:int, conn:Connection=Connection.FILE) -> list:
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+            """
+            SELECT * FROM completion WHERE user_id = ? AND habit_sub_id = ?
+            """,
+            (user_id, sub_id)
+        )
+        return result.fetchall()
+    except sqlite3.Error as e:
+        log.error(f"Error getting completions for user with ID {user_id} and sub with ID {sub_id}: {e}")
+        return []
+    finally:
+        cx.commit()
+        cx.close()
+
+def db_get_latest_sub_completion_for_user(user_id:int, sub_id:int, conn:Connection=Connection.FILE) -> list:
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+            """
+            SELECT * FROM completion WHERE user_id = ? AND habit_sub_id = ? ORDER BY date DESC LIMIT 1
+            """,
+            (user_id, sub_id)
+        )
+        return result.fetchall()
+    except sqlite3.Error as e:
+        log.error(f"Error getting completions for user with ID {user_id} and sub with ID {sub_id}: {e}")
+        return []
+    finally:
+        cx.commit()
+        cx.close()
+
+def db_get_timeframe_sub_completions_for_user(user_id:int, sub_id:int, start_date:str, end_date:str, conn:Connection=Connection.FILE) -> list:
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+            """
+            SELECT * FROM completion WHERE user_id = ? AND habit_sub_id = ?
+            """,
+            (user_id, sub_id)
+        )
+        return result.fetchall()
+    except sqlite3.Error as e:
+        log.error(f"Error getting completions for user with ID {user_id} and sub with ID {sub_id}: {e}")
         return []
     finally:
         cx.commit()

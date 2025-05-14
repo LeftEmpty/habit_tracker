@@ -23,7 +23,7 @@ class Periodicity(Enum):
 
 @dataclass
 class Completion:
-    def __init__(self, completion_id:int, user_id:int, habit_sub_id:int, date:str):
+    def __init__(self, user_id:int, habit_sub_id:int, compl_date:date):
         """Data class for keeping track of habit completions, should reflect the respecive db entry
 
         Args:
@@ -32,10 +32,9 @@ class Completion:
             habit_sub_id (int): _description_
             date (str): _description_
         """
-        self.completion_id:int = completion_id
         self.habit_sub_id:int = habit_sub_id
         self.user_id:int = user_id
-        self.date:str = date
+        self.compl_date:date = compl_date
 
 
 class HabitSubscription:
@@ -64,8 +63,6 @@ class HabitSubscription:
         self.periodicity:Periodicity = self._normalize_periodicity(periodicity)
         self.cur_streak:int = cur_streak
         self.max_streak:int = max_streak
-
-        self.completed_locally:bool = self.get_completed_state()
 
         # try get habit data if it isn't provided
         if habit_data:
@@ -133,11 +130,16 @@ class HabitSubscription:
         else:
             raise TypeError(f"Expected str or Periodicity, got {type(value)}")
 
-    def get_completed_state(self) -> bool:
-        """'Algorithm' to figure out if the subscription has been completed,
-        according to the habits periodicity."""
-        today:date = date.today()
+    def _date_in_cur_period(self, date:date=date.today()) -> bool:
+        """Checks if the given date is in the current timeframe specified by this subscription's periodicity.
 
+        Args:
+            date (date, optional): The date to check. Defaults to date.today().
+
+        Returns:
+            bool: True if the date is in the current timeframe, False otherwise.
+        """
+        today = date.today()
         weekday_map = {
             Periodicity.MONDAY: 0,
             Periodicity.TUESDAY: 1,
@@ -149,48 +151,113 @@ class HabitSubscription:
         }
 
         if self.periodicity == Periodicity.DAILY:
-            start_date = today
+            # For daily periodicity, any date matches
+            return True
         elif self.periodicity == Periodicity.WEEKLY:
-            start_date = today - timedelta(days=6)
+            # For weekly periodicity, check if the date is within the current week (since this monday)
+            start_date = date - timedelta(days=today.weekday())
+            return start_date <= date <= today
         elif self.periodicity in weekday_map:
-            if today.weekday() != weekday_map[self.periodicity]:
-                return False
-            start_date = today
+            # For specific weekdays, check if the date matches the periodicity's weekday
+            return date.weekday() == weekday_map[self.periodicity]
         else:
             raise ValueError(f"Unsupported periodicity: {self.periodicity}")
 
-        completions = self.get_completions_for_period(start_date, today)
-        return len(completions) > 0
+    def on_completion_input_action(self) -> bool:
+        """Gets input to change completion state, essentially a toggle function which checks current state and validates input semantic."""
+        # Get current state
+        cur_compl:bool = self.get_completed_state()
+        if cur_compl:
+            return self._retract_completion_event()
+        else:
+            return self._add_completion_event()
 
-    def add_completion_event(self, date:date=date.today()) -> None:
+    def get_completed_state(self, completions:list[Completion]=[]) -> bool:
+        """'Algorithm' to figure out if the subscription has been completed.
+        Checks if one of this subs completions has a date in the current periodicity timeframe.
+
+        Args:
+            completions (list[Completion], optional): Can provide completions if assumed to be correct to reduce query load. Defaults to [].
+
+        Returns:
+            bool: sub is currently completed.
+        """
+        """#! DEPRECATED bad cause there is no need to query all completions
+        if not len(completions) > 0:
+            completions = self.get_sub_completions()
+        for c in completions:
+            if self._date_in_cur_period(c.compl_date):
+                return True
+        return False"""
+        latest_compl = request.get_latest_sub_completion_for_user(self.owner_id, self.id)
+        if not latest_compl:
+            print(f"No latest completion found for sub {self.id} from user {self.owner_id}.")
+            return False
+        return self._date_in_cur_period(latest_compl.compl_date)
+
+    def _add_completion_event(self, date:date=date.today()) -> bool:
         """Add a completion entry for this user & subscription
 
         Args:
             date (date, optional): date on which the completion event occured. Defaults to date.today().
+
+        Returns:
+            bool: success / failure
         """
-        if self.get_completed_state(): return
-        # CompletionEvent()
-        # @TODO might be good to let user's properly un-check / 'un-complete' their habits - delete completion entry & reset locally
+        return request.create_completion(Completion(self.owner_id, self.id, date))
 
-    def remove_completion_event(self) -> None:
-        """Should only ever be used to 'uncheck' a habit."""
-        pass
+    def _retract_completion_event(self) -> bool:
+        """Gets the latest completion and deletes db entry if applicable.
+        ! Only call this if the sub is completed, this function doesn't validate completion state"""
+        latest:Completion|None = request.get_latest_sub_completion_for_user(self.owner_id, self.id)
+        if latest:
+            return request.delete_completion(self.owner_id, self.id, latest.compl_date)
+        return False
 
-    def get_completions_for_period(self, start_date:date, end_date:date) -> list[Completion]:
-        """returns all completion events for the given habit_subscription"""
-        # @TODO
+    def get_sub_completions(self, b_all:bool=True, start_date:date=date.today(), end_date:date=date.today()) -> list[Completion]:
+        """Get all completions for this subscription (and it's owning user).
+        Toggable by bool to specify a timeframe via start/end date parameters.
+
+
+        Args:
+            b_all (bool, optional): Return all completions. Defaults to True.
+            start_date (date, optional): start of timeframe, requires b_all=False. Defaults to date.today().
+            end_date (date, optional): end of timeframe, requires b_all=False. Defaults to date.today().
+
+        Returns:
+            list[Completion]: list of all completions.
+        """
+
+        if b_all:
+            completions = request.get_all_sub_completions_for_user(self.owner_id, self.id)
+            if not len(completions) > 0: return []
+            else: return completions
+
+        elif not b_all and start_date and end_date and start_date < end_date:
+            # @TODO
+            return []
+
+        print(f"Error getting sub completions due to improper function usage - check the dates.")
         return []
 
     def on_cancel_subscription(self) -> None:
         """Event that should be called when a user cancels this subscription,
         When the user was the last subscriber to the used habit (data), then also delete that habit (only unofficial)"""
+        # delete habit data and subscription
         if (not self.habit_data.b_public) or (self.habit_data.get_subscriber_count() <= 1 and not self.habit_data.b_official):
             request.delete_habit_data(self.data_id)
         request.delete_habit_sub(self.id)
+
+        # delete all completions for this sub
+        request.delete_all_sub_completions_for_user(self.owner_id, self.id)
+        #for c in request.get_all_sub_completions_for_user(self.owner_id, self.id):
+        #    if not request.delete_completion(self.owner_id, self.id, c.compl_date):
+        #        print(f"Error deleting all completions for sub with ID {self.id} on user {self.owner_id}")
+
         #del self
 
     def modify_sub(self, periodicty:Periodicity|str) -> None:
-        """modifies this subs data & modifies entry in db"""
+        """Modifies this subs data & modifies entry in db"""
         p = self._normalize_periodicity(periodicty)
         self.periodicity = p
         request.modify_sub_periodicty(self.id, p.value)

@@ -38,7 +38,7 @@ HabitSubscription: str = """
     )"""
 
 Completions: str = """
-    CREATE TABLE IF NOT EXISTS completions (
+    CREATE TABLE IF NOT EXISTS completion (
         date TEXT NOT NULL,
         user_id INTEGER NOT NULL,
         habit_sub_id INTEGER NOT NULL,

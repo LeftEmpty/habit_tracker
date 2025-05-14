@@ -38,7 +38,7 @@ class ScrollableFrame(ttk.Frame):
 
 
 class HabitSubListWidget(ttk.Frame):
-    def __init__(self, parent:ttk.Frame, owning_gui:"GUI", mode:HabitListMode, habits:Optional[list[HabitData]] = None, subs:Optional[list[HabitSubscription]] = None):
+    def __init__(self, parent:ttk.Frame, owning_gui:"GUI", mode:HabitListMode, habits:Optional[list[HabitData]]=None, subs:Optional[list[HabitSubscription]] = None):
         """creates a scrollable frame and inserts the habits (data) as a list of habit wigets"""
         super().__init__(parent, style="Sidebar.TFrame")
         self.container:ScrollableFrame = ScrollableFrame(self)
@@ -124,29 +124,35 @@ class SubWidget(ttk.Frame):
         self.owning_gui = owning_gui
         self.sub = sub
 
-        # Habit name
-        ttk.Label(self, text=sub.habit_data.name, style="Sidebar.TLabel").grid(row=0, column=0, pady=8, sticky="w")
+        self._build_ui()
+        self._update_state(self.sub.get_completed_state())
 
-        # Adjust buttons based on subscription bool (either settings popup, or add subscribe button)
-        btn_ico:str = ""
-        if sub.get_completed_state():
-            btn_ico = ""
-        self.compl_btn:ttk.Button = ttk.Button(self, text=btn_ico, command=self.complete)
+    def _build_ui(self) -> None:
+        """Build basic widget layout"""
+        self.name_label = ttk.Label(self, text=self.sub.habit_data.name, style="Sidebar.TLabel")
+        self.name_label.grid(row=0, column=0, pady=8, sticky="w")
+
+        self.compl_btn:ttk.Button = ttk.Button(self, text="[ ]", command=self.complete)
         self.compl_btn.grid(row=0, column=1, pady=4, padx=4, sticky="e")
 
         ttk.Button(self, text="", command=self.edit).grid(row=0, column=2, pady=4, padx=4, sticky="e")
 
+    def _update_state(self, compl:bool) -> None:
+        """Adjusts widget configuration based on habit completion state."""
+        if compl:
+            self.compl_btn.config(text="[✗]")
+            self.config(style="NotificationSuccess.TFrame")
+            self.name_label.config(style="NotificationSuccess.TLabel")
+        else:
+            self.compl_btn.config(text="[✓]")
+
     def complete(self):
-        if self.sub:
-            if self.sub.completed_locally:
-                self.sub.add_completion_event()
-                self.sub.completed_locally = True
-                self.compl_btn.config(text="")
-            else:
-                self.sub.completed_locally = False
-        # @TODO would be better if it first only completes it locally and on close/disconnect adds the completion event
-        # @TODO issue with that would be crashes, etc. but maybe that could be considered an expected error? idk
-        # self.parent.reload_list()
+        """Call on_completion_input_action on this wigdet's subscription, then update states and refresh parent list."""
+        if not self.sub:
+            return
+        self.sub.on_completion_input_action()
+        self._update_state(self.sub.get_completed_state())
+        self.parent_list.reload_list()
 
     def edit(self):
         if self.sub and self.owning_gui.cur_user:

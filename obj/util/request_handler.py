@@ -1,10 +1,10 @@
 import db.src.controller as dbc
 import gui.util.validators as validator # validate_input_login, validate_input_register
 from gui.util.gui_enums import InputResponse
-from obj.src.subscription import HabitSubscription
+from obj.src.subscription import HabitSubscription, Completion
 
 import hashlib
-from datetime import date
+from datetime import datetime, date
 
 # forward declaring for better type checking / overview
 from typing import Optional, TYPE_CHECKING
@@ -232,3 +232,69 @@ def get_subs_for_user(user_id:int, user_displayname:str="") -> list[HabitSubscri
             subs.append(sub)
 
     return subs
+
+#* **************************************** completions ****************************************
+def create_completion(completion:Completion) -> bool:
+    """Format completion's date and try to create a DB enry.
+
+    Args:
+        completion (Completion): completion that should be added/registered to DB.
+
+    Returns:
+        bool: success / failure
+    """
+    date_str = completion.compl_date.isoformat()
+    return dbc.db_create_completion(date_str, completion.user_id, completion.habit_sub_id)
+
+def delete_completion(user_id:int, sub_id:int, date:date) -> bool:
+    """deletes a completion based on the date.
+
+    Args:
+        user_id (int): owning user id.
+        sub_id (int): owning sub id.
+        date (date): date on which the completion should be deleted from.
+
+    Returns:
+        bool: success / failure
+    """
+    date_str = date.isoformat() # 'YYYY-MM-DD'
+    return dbc.db_delete_completion(user_id, sub_id, date_str)
+
+def delete_all_sub_completions_for_user(user_id:int, sub_id:int) -> bool:
+    return dbc.db_delete_completion(user_id, sub_id, b_all=True)
+
+def get_latest_sub_completion_for_user(user_id:int, sub_id:int) -> Optional[Completion]:
+    result = dbc.db_get_latest_sub_completion_for_user(user_id, sub_id)
+    if not len(result) > 0:
+        return None
+    c = Completion(
+        user_id=result[0][1],
+        habit_sub_id=result[0][2],
+        compl_date=datetime.strptime(result[0][0], "%Y-%m-%d").date()
+    )
+    return c
+
+def get_all_sub_completions_for_user(user_id:int, sub_id:int) -> list[Completion]:
+    """Gets all completions that match user and sub IDs,
+    then creates completion objects and return the elist.
+
+    Args:
+        user_id (int): owning user id.
+        sub_id (_type_): owning sub id.
+
+    Returns:
+        list[Completion]: list of all completions that match the IDs, ERROR: list may be empty!
+    """
+    result = dbc.db_get_all_sub_completions_for_user(user_id, sub_id)
+    if not len(result) > 0:
+        return []
+    completions:list[Completion] = []
+    for r in result:
+        completions.append(
+            Completion(
+                user_id=r[0],
+                habit_sub_id=r[1],
+                compl_date=datetime.strptime(r[2], "%Y-%m-%d").date()
+            )
+        )
+    return completions
