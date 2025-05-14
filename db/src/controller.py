@@ -5,7 +5,6 @@ from enum import Enum
 sys.path.append(os.path.abspath("."))
 
 from db.util.logger import log
-# from db.util.populate_debug_data import populate_all as populate_dummy_data
 from db.src.table_definitions import get_all_table_defs
 
 
@@ -17,7 +16,7 @@ class Connection(Enum):
 
 
 #* ********************************************* DB INIT *********************************************
-def db_init(b_debug:bool=False, conn: Connection = Connection.FILE) -> None:
+def db_init(conn:Connection=Connection.FILE) -> None:
     """Initializes the database connection
 
     Args:
@@ -29,10 +28,21 @@ def db_init(b_debug:bool=False, conn: Connection = Connection.FILE) -> None:
             log.info("Creating table: " + str(table))
             cx.execute(table)
         except sqlite3.Error as e:
-            log.error(f"Error creating table {table}: {e}")
+            log.error(f"Failed to create table {table}: {e}")
 
-    if b_debug:
-        print("[DEBUG MODE] Populating database with dummy data...")
+def db_drop_all(conn:Connection=Connection.FILE) -> None:
+    """temporary function used to test/debug, currently only called in populate_debug_data.py"""
+    cx = sqlite3.connect(conn.value)
+    log.info("Dropping all tables")
+    tables_to_drop:list[str] = ["user", "habit_data", "habit_subscription", "completion"]
+    for table in tables_to_drop:
+        try:
+            cmd = str("DROP TABLE IF EXISTS " + table)
+            cx.execute(cmd)
+        except sqlite3.Error as e:
+            log.error(f"Failed to drop table {table}: {e}")
+    cx.commit()
+    cx.close()
 
 #* ********************************************* USER *********************************************
 def db_create_user(display_name:str, username:str, email:str, password:str, conn:Connection=Connection.FILE) -> bool:
