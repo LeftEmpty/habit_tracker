@@ -1,100 +1,114 @@
 import random
 import hashlib
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
+import obj.src.subscription as sub
 import db.src.controller as dbc
 
-# Create completions directly via SQL
-import sqlite3
-
-PERIODICITIES = ["Daily", "Weekly", "Every Monday", "Every Wednesday", "Every Friday", "Every Sunday"]
-NAMES = ["Alice", "Bob"]
-HABITS = [
-    ("Morning jog", "Jog for 30 minutes."),
-    ("Read book", "Read at least 10 pages."),
-    ("Meditate", "10 minutes meditation."),
-    ("Go to gym", "Workout 1 hour."),
-    ("Buy groceries", "Don't forget veggies."),
-    ("Walk the dog", "Don't say it out loud."),
-    ("Drink water", "At least 8 cups."),
-    ("Journal", "Write a paragraph.")
-]
 
 def populate_all() -> None:
-    """Creates interconnected dummy data."""
-    print("CREATING DUMMY DATA")
+    #  Init
+    print("CREATING DUMMY DATA.")
     print("Dropping tables...")
     dbc.db_drop_all()
     print("Reinitializing db...")
     dbc.db_init()
 
-    print("Creating users...")
-    users = []
-    for name in NAMES:
-        username = name.lower()
-        email = f"{username}@test.com"
-        password = hashlib.sha256("password123".encode()).hexdigest()
-        dbc.db_create_user(name, username, email, password)
-        user_id = dbc.db_get_userid_by_credentials(username, password)
-        users.append((user_id, name))
+    # User
+    print("Creating Users...")
+    pw=hashlib.sha256("password123".encode()).hexdigest()
+    dbc.db_create_user("HTOfficial", "admin", "admind@ht.com", pw)
+    dbc.db_create_user("Alice", "alice", "alice@test.com", pw)
+    dbc.db_create_user("Bob", "bob", "bob@test.com", pw)
 
-    print("Creating habits...")
-    habit_ids = []
-    for user_id, name in users:
-        # Only add habits for Bob
-        if name == "Bob":
-            for habit_name, habit_desc in HABITS:
-                habit_id = dbc.db_create_habit_data(
-                    author_user_id=user_id,
-                    author_display_name=name,
-                    habit_name=habit_name,
-                    habit_desc=habit_desc,
-                    b_public=True,
-                    b_official=False,
-                    last_modified=datetime.now().isoformat()
-                )
-                habit_ids.append((habit_id, user_id))
-
-    print("Subscribing users to habits...")
-    subs = []
-    for habit_id, user_id in habit_ids:
-        periodicity = random.choice(PERIODICITIES)
-        creation_date = (datetime.now() - timedelta(days=28)).date().isoformat()
-        latest_date = datetime.now().date().isoformat()
-        sub_id = dbc.db_create_habit_sub(
-            owner_user_id=user_id,
-            habit_data_id=habit_id,
-            creation_date=creation_date,
-            latest_date=latest_date,
-            periodicity=periodicity,
-            cur_streak=random.randint(1, 5),
-            max_streak=random.randint(5, 10)
+    # HabitData
+    print("Creating Habits...")
+    # 4 official
+    dbc.db_create_habit_data(0, "HTOfficial", "Read book", "Read at least 10 pages.", True, True)
+    dbc.db_create_habit_data(0, "HTOfficial", "Meditate", "10 minutes of meditation.", True, True)
+    dbc.db_create_habit_data(0, "HTOfficial", "Workout", "30 minutes of exercising.", True, True)
+    dbc.db_create_habit_data(0, "HTOfficial", "Journal", "Write a paragraph.", True, True)
+    # 6 authored by Alice
+    HABITS = [
+        ("Morning jog", "Jog for 30 minutes."),
+        ("Read book", "Read at least 10 pages."),
+        ("Go to gym", "Workout 1 hour."),
+        ("Buy groceries", "Don't forget veggies."),
+        ("Walk the dog", "Don't say it out loud."),
+        ("Drink water", "At least 6 cups."),
+    ]
+    for habit_name, habit_desc in HABITS:
+        dbc.db_create_habit_data(
+            author_user_id=1,
+            author_display_name="Alice",
+            habit_name=habit_name,
+            habit_desc=habit_desc,
+            b_public=random.choice([True, False]),
+            b_official=False,
+            last_modified=random.choice(["", datetime.today().isoformat()])
         )
-        subs.append((sub_id, user_id, periodicity))
 
-    print("Adding completions for the last 4 weeks...")
-    cx = sqlite3.connect(dbc.Connection.FILE.value)
-    today = datetime.now().date()
-    for sub_id, user_id, periodicity in subs:
-        for i in range(28):
-            date = today - timedelta(days=i)
-            if periodicity == "Daily" or (periodicity == "Weekly" and date.weekday() == 0) or \
-               (periodicity == "Every Monday" and date.weekday() == 0) or \
-               (periodicity == "Every Wednesday" and date.weekday() == 2) or \
-               (periodicity == "Every Friday" and date.weekday() == 4) or \
-               (periodicity == "Every Sunday" and date.weekday() == 6):
-                if random.random() < 0.8:  # 80% chance of completion
-                    cx.execute(
-                        """
-                        INSERT INTO completion (date, user_id, habit_sub_id)
-                        VALUES (?, ?, ?)
-                        """,
-                        (date.isoformat(), user_id, sub_id)
-                    )
-    cx.commit()
-    cx.close()
+    # HabitSubscriptions
+    print("Creating Subscriptions & Completions...")
+    # Sub 0 -> Monday, no completions
+    dbc.db_create_habit_sub(2, 0, date.today().isoformat(), None, sub.Periodicity.MONDAY.value, 0, 0)
+    # Sub 1 -> Tuesday, completed: 2w, 1w ago, streak : 2|2
+    dbc.db_create_habit_sub(2, 1, date.today().isoformat(), get_previous_weekday(0, 1).isoformat(), sub.Periodicity.TUESDAY.value, 2, 2)
+    dbc.db_create_completion(get_previous_weekday(1, 2).isoformat(), 1, 1)
+    dbc.db_create_completion(get_previous_weekday(1, 1).isoformat(), 1, 1)
+    # Sub 2 -> Wednesday, completed: 3w, 2w, 1w ago, streak: 3|3
+    dbc.db_create_habit_sub(2, 2, date.today().isoformat(), get_previous_weekday(2, 1).isoformat(), sub.Periodicity.WEDNESDAY.value, 3, 3)
+    dbc.db_create_completion(get_previous_weekday(2, 3).isoformat(), 1, 2)
+    dbc.db_create_completion(get_previous_weekday(2, 2).isoformat(), 1, 2)
+    dbc.db_create_completion(get_previous_weekday(2, 1).isoformat(), 1, 2)
+    # Sub 3 -> Thursday, completed: 1w ago, streak: 1|1
+    dbc.db_create_habit_sub(2, 3, date.today().isoformat(), get_previous_weekday(3, 1).isoformat(), sub.Periodicity.THURSDAY.value, 1, 1)
+    dbc.db_create_completion(get_previous_weekday(3, 1).isoformat(), 1, 3)
+    # Sub 4 -> Friday, completed: 2w ago, streak: 0|1
+    dbc.db_create_habit_sub(2, 4, date.today().isoformat(), get_previous_weekday(4, 2).isoformat(), sub.Periodicity.FRIDAY.value, 0, 1)
+    dbc.db_create_completion(get_previous_weekday(4, 2).isoformat(), 1, 4)
+    # Sub 5 -> Saturday, completed: 3w ago, streak: 0|1
+    dbc.db_create_habit_sub(2, 5, date.today().isoformat(), get_previous_weekday(5, 3).isoformat(), sub.Periodicity.SATURDAY.value, 0, 1)
+    dbc.db_create_completion(get_previous_weekday(5, 3).isoformat(), 1, 5)
+    # Sub 6 -> Sunday, completed: 3w, 2w ago, streak: 0|2
+    dbc.db_create_habit_sub(2, 6, date.today().isoformat(), get_previous_weekday(6, 2).isoformat(), sub.Periodicity.SUNDAY.value, 0, 2)
+    dbc.db_create_completion(get_previous_weekday(6, 2).isoformat(), 1, 6)
+    dbc.db_create_completion(get_previous_weekday(6, 3).isoformat(), 1, 6)
+    # Sub 7 -> Daily, completed: last 5 days, excl. today, streak: 5|5
+    dbc.db_create_habit_sub(2, 7, date.today().isoformat(), date.today().isoformat(), sub.Periodicity.DAILY.value, 5, 5)
+    for i in range(1, 6):
+        dbc.db_create_completion((date.today() - timedelta(days=i)).isoformat(), 1, 7)
+    # Sub 8 -> Daily, completed: 12 days, then 3 days break, 3 days, then 5 days break, then 2 days incl. today, streak: 2|4
+    dbc.db_create_habit_sub(2, 8, date.today().isoformat(), date.today().isoformat(), sub.Periodicity.DAILY.value, 2, 4)
+    for i in range(12+3+3+5+2):
+        if (i >= 2 and i < 7) or (i >= 10 and i < 13): # break 1 & 2
+            continue
+        dbc.db_create_completion((date.today() - timedelta(days=i)).isoformat(), 1, 8)
+    # Sub 9 -> Weekly, completed: today, last 3 sundays, streak: 4|4
+    dbc.db_create_habit_sub(2, 9, date.today().isoformat(), date.today().isoformat(), sub.Periodicity.WEEKLY.value, 4, 4)
+    dbc.db_create_completion(get_previous_weekday(6, 3).isoformat(), 1, 9)
+    dbc.db_create_completion(get_previous_weekday(6, 2).isoformat(), 1, 9)
+    dbc.db_create_completion(get_previous_weekday(6, 1).isoformat(), 1, 9)
 
-    print("FINISHED CREATING DUMMY DATA.")
+    print("FINISHED CREATING DEBUG DUMMY DATA.")
+    print("Login using username: \"alice\" or \"bob\" and password: \"password123\".")
+    print("Bob is an empty test account, while the alice account contains dummy data.")
+
+def get_previous_weekday(target_weekday:int, weeks_ago:int=1) -> date:
+    """Returns the date of the `weeks_ago`-th previous occurrence of the target weekday.
+    Helper function.
+
+    Args:
+        target_weekday (int): Monday = 0, Sunday = 6.
+        weeks_ago (int): 1 for last week, 2 for 2nd last, etc.
+
+    Returns:
+        date: The date of the desired past weekday.
+    """
+    today = date.today()
+    today_weekday = today.weekday()
+    days_since_target = (today_weekday - target_weekday) % 7 + 7 * (weeks_ago - 1)
+    return today - timedelta(days=days_since_target)
 
 if __name__ == "__main__":
     populate_all()

@@ -336,7 +336,7 @@ def db_delete_habit_sub(sub_id:int, conn:Connection=Connection.FILE) -> bool:
         cx.commit()
         cx.close()
 
-def db_modifiy_sub(sub_id:int, periodicity:str, conn:Connection=Connection.FILE) -> bool:
+def db_modifiy_sub_periodicty(sub_id:int, periodicity:str, conn:Connection=Connection.FILE) -> bool:
     cx = sqlite3.connect(conn.value)
     try:
         result = cx.execute(
@@ -344,6 +344,54 @@ def db_modifiy_sub(sub_id:int, periodicity:str, conn:Connection=Connection.FILE)
             UPDATE habit_subscription SET periodicty = ? WHERE habit_sub_id = ?
             """,
             (periodicity, sub_id)
+        )
+        return True
+    except sqlite3.Error as e:
+        log.error(f"Failed to modify habit subscription wiht ID {sub_id}")
+        return False
+    finally:
+        cx.commit()
+        cx.close()
+
+# HabitSubscription: str = """
+#     CREATE TABLE IF NOT EXISTS habit_subscription (
+#         habit_sub_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#         user_id INTEGER NOT NULL,
+#         data_id INTEGER NOT NULL,
+#         periodicity TEXT NOT NULL,
+#         cur_streak INTEGER NOT NULL,
+#         max_streak INTEGER NOT NULL,
+#         creation_date TEXT NOT NULL,
+#         latest_date TEXT,
+#         FOREIGN KEY(user_id) REFERENCES User(user_id) ON DELETE CASCADE,
+#         FOREIGN KEY(data_id) REFERENCES HabitData(habit_data_id)
+#     )"""
+
+def db_modifiy_sub(sub_id:int, periodicity:str, cur_streak:int, max_streak:int, latest_date:str, conn:Connection=Connection.FILE) -> bool:
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+            """
+            UPDATE habit_subscription SET periodicity = ?, cur_streak = ?, max_streak = ? latest_date = ? WHERE habit_sub_id = ?
+            """,
+            (periodicity, cur_streak, max_streak, latest_date, sub_id)
+        )
+        return True
+    except sqlite3.Error as e:
+        log.error(f"Failed to modify habit subscription wiht ID {sub_id}")
+        return False
+    finally:
+        cx.commit()
+        cx.close()
+
+def db_modifiy_sub_streak(sub_id:int, new_cur_val:int, new_max_val:int, conn:Connection=Connection.FILE) -> bool:
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+            """
+            UPDATE habit_subscription SET cur_streak = ?, max_streak = ? WHERE habit_sub_id = ?
+            """,
+            (new_cur_val, new_max_val, sub_id)
         )
         return True
     except sqlite3.Error as e:
