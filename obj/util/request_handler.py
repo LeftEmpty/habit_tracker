@@ -194,11 +194,31 @@ def delete_habit_sub(sub_id:int) -> bool:
 def delete_habit_data(data_id:int) -> bool:
     return dbc.db_delete_habit_data(data_id)
 
-def modify_sub_periodicty(sub_id:int, new_periodicity:str) -> bool:
-    """modifies periodicty of subscription db entry."""
-    if sub_id < 0 or new_periodicity == "":
-        return False
-    return dbc.db_modifiy_sub(sub_id, new_periodicity)
+#! DEPRECATED
+#def modify_sub_periodicity(sub_id:int, new_periodicity:str) -> bool:
+#    """modifies periodicty of subscription db entry."""
+#    if sub_id < 0 or new_periodicity == "":
+#        return False
+#    return dbc.db_modifiy_sub_periodicty(sub_id, new_periodicity)
+
+def update_sub_entry(sub:HabitSubscription) -> bool:
+    """Modifies/Updates all mutable habit_subscription table entries.
+
+    Args:
+        sub (HabitSubscription): Object containing the updated data, used to overwrite existing data
+
+    Returns:
+        bool: success / failure
+    """
+    compl_date:str = sub.last_completed_date.isoformat() if sub.last_completed_date else ""
+    dbc.db_modifiy_sub(
+        sub_id=sub.id,
+        periodicity=sub.periodicity.value,
+        cur_streak=sub.cur_streak,
+        max_streak=sub.max_streak,
+        latest_date=compl_date
+    )
+    return False
 
 def get_subs_for_user(user_id:int, user_displayname:str="") -> list[HabitSubscription]:
     """Uses dbc to query a habit subscription according to condition,
@@ -224,8 +244,8 @@ def get_subs_for_user(user_id:int, user_displayname:str="") -> list[HabitSubscri
             periodicity=r[3],
             cur_streak=r[4],
             max_streak=r[5],
-            last_completed_date=r[6],
-            creation_date=r[7],
+            creation_date=r[6],
+            last_completed_date=r[7],
             sub_id=r[0]
         )
         if sub:
@@ -245,6 +265,8 @@ def create_completion(completion:Completion) -> bool:
     """
     date_str = completion.compl_date.isoformat()
     return dbc.db_create_completion(date_str, completion.user_id, completion.habit_sub_id)
+
+
 
 def delete_completion(user_id:int, sub_id:int, date:date) -> bool:
     """deletes a completion based on the date.
