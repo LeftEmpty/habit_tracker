@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 from dataclasses import dataclass
 from enum import Enum
 
@@ -81,8 +81,10 @@ class HabitSubscription:
         self.id:int = sub_id
         self.data_id:int = data_id
         self.owner_id:int = user_id
-        self.creation_date:date = creation_date
+        self.creation_date:date = self._normalize_date(creation_date)
         self.last_completed_date:date|None = last_completed_date
+        if last_completed_date != None:
+            self.last_completed_date = self._normalize_date(last_completed_date)
         self.periodicity:Periodicity = self._normalize_periodicity(periodicity)
         self.cur_streak:int = cur_streak
         self.max_streak:int = max_streak
@@ -153,6 +155,11 @@ class HabitSubscription:
         else:
             raise TypeError(f"Expected str or Periodicity, got {type(value)}")
 
+    def _normalize_date(self, d:date|str) -> date:
+        if isinstance(d, date):
+            return d
+        return datetime.strptime(d, "%Y-%m-%d").date()
+
     def _periodicty_relevant_today(self) -> bool:
         """Checks if subscription's periodicity weekday is same as todays, which makes it relevant.
         Daily or Weekly subscriptions are always relevant."""
@@ -189,11 +196,15 @@ class HabitSubscription:
         check_date:date = latest_compl.compl_date
         today:date = date.today()
 
-        # Completed if daily / week-day and completed today (yesterday or last week's weekday don't make it currently completed)
-        if (self.periodicity == Periodicity.DAILY or self.periodicity.weekday_index == date.today().weekday) and check_date == today:
+        # Completed if daily and already completetd today
+        if self.periodicity == Periodicity.DAILY and check_date == today:
             return True
-        # Complete if weekly and completed since this weeks monday
+        # Completed if weekly and completed since this weeks monday
         elif self.periodicity == Periodicity.WEEKLY and check_date >= today - timedelta(days=today.weekday()):
+            return True
+        # Completed if last same weekday and last completion was today, last weekday doesn't count.. *(not daily/weekly so we can check index)
+        elif self.periodicity != Periodicity.WEEKLY and self.periodicity != Periodicity.DAILY and\
+            self.periodicity.weekday_index() == today.weekday() and check_date == today:
             return True
         # False otherwise..
         else:
@@ -259,11 +270,43 @@ class HabitSubscription:
         print(f"Error getting sub completions due to improper function usage - check the dates.")
         return []
 
+    def get_completion_rate(self) -> tuple[int, int, float]:
+        """Figures out success/completion rate by how often the sub should have been completed and how many times it actually was.
+
+        Returns:
+            float: success rate as a percentage between 0 - 100
+        """
+        start_date:date = self.creation_date
+        end_date:date = date.today()
+        delta_days = (end_date - start_date).days + 1  # include today
+
+        # Get completions
+        completions = self.get_sub_completions()
+        actual_count = len(completions)
+
+        # Calculate expected completions
+        if self.periodicity == Periodicity.DAILY:
+            expected_count = delta_days
+        elif self.periodicity == Periodicity.WEEKLY:
+            # full 7 day weeks + potential partial week
+            expected_count = (delta_days // 7) + (1 if delta_days % 7 else 0)
+        else:
+            # counts occurences of the weekday, done by comparing the weekday to periodicity weekday index for every day in timespan
+            weekday_index = self.periodicity.weekday_index()
+            expected_count = sum(1 for i in range(delta_days)
+                                if (start_date + timedelta(days=i)).weekday() == weekday_index)
+
+        if expected_count == 0: # no divided by 0 errors in this house.
+            return (0, 0, 0.0)
+
+        rate = (actual_count / expected_count) * 100
+        return (actual_count, expected_count, round(min(rate, 100.0), 2))
+
     def on_cancel_subscription(self) -> None:
         """Event that should be called when a user cancels this subscription,
         When the user was the last subscriber to the used habit (data), then also delete that habit (only unofficial)"""
         # delete habit data and subscription
-        if (not self.habit_data.b_public) or (self.habit_data.get_subscriber_count() <= 1 and not self.habit_data.b_official):
+        if (not self.habit_data.b_public) or (self.habit_data.get_subscriber_count() <= 1 and self.habit_data.author_id == self.owner_id):
             request.delete_habit_data(self.data_id)
         request.delete_habit_sub(self.id)
 

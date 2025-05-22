@@ -372,7 +372,7 @@ def db_modifiy_sub(sub_id:int, periodicity:str, cur_streak:int, max_streak:int, 
     try:
         result = cx.execute(
             """
-            UPDATE habit_subscription SET periodicity = ?, cur_streak = ?, max_streak = ? latest_date = ? WHERE habit_sub_id = ?
+            UPDATE habit_subscription SET periodicity = ?, cur_streak = ?, max_streak = ?, latest_date = ? WHERE habit_sub_id = ?
             """,
             (periodicity, cur_streak, max_streak, latest_date, sub_id)
         )

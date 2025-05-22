@@ -235,8 +235,8 @@ class HabitEditPopup(tk.Toplevel):
     def _on_delete(self):
         """Cancels the subscription (might delete it, logic handled in sub)
         Then calls callback to list, gives feedback, and destroys self(popup)"""
-        self.user.habit_subs.remove(self.sub)
         self.sub.on_cancel_subscription()
+        self.user.get_subscribed_habits(HabitQueryCondition.ALL)
 
         if self.on_creation_callback:
             self.on_creation_callback()

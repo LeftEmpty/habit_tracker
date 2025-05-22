@@ -56,40 +56,40 @@ def populate_all() -> None:
     print("Creating Subscriptions & Completions...")
     # Sub 1 -> Monday, no completions
     dbc.db_create_habit_sub(2, 1, date.today().isoformat(), None, sub.Periodicity.MONDAY.value, 0, 0)
-    # Sub 2 -> Tuesday, completed: 2w, 1w ago, streak : 2|2
-    dbc.db_create_habit_sub(2, 2, date.today().isoformat(), get_previous_weekday(0, 1).isoformat(), sub.Periodicity.TUESDAY.value, 2, 2)
+    # Sub 2 -> Tuesday, completed: 2w, 1w ago, streak : 2|2 - creation date can be massively different
+    dbc.db_create_habit_sub(2, 2, get_previous_weekday(1, 4).isoformat(), get_previous_weekday(0, 1).isoformat(), sub.Periodicity.TUESDAY.value, 2, 2)
     dbc.db_create_completion(get_previous_weekday(1, 2).isoformat(), 2, 2)
     dbc.db_create_completion(get_previous_weekday(1, 1).isoformat(), 2, 2)
     # Sub 3 -> Wednesday, completed: 3w, 2w, 1w ago, streak: 3|3
-    dbc.db_create_habit_sub(2, 3, date.today().isoformat(), get_previous_weekday(2, 1).isoformat(), sub.Periodicity.WEDNESDAY.value, 3, 3)
+    dbc.db_create_habit_sub(2, 3, get_previous_weekday(2, 3).isoformat(), get_previous_weekday(2, 1).isoformat(), sub.Periodicity.WEDNESDAY.value, 3, 3)
     dbc.db_create_completion(get_previous_weekday(2, 3).isoformat(), 2, 3)
     dbc.db_create_completion(get_previous_weekday(2, 2).isoformat(), 2, 3)
     dbc.db_create_completion(get_previous_weekday(2, 1).isoformat(), 2, 3)
     # Sub 4 -> Thursday, completed: 1w ago, streak: 1|1
-    dbc.db_create_habit_sub(2, 4, date.today().isoformat(), get_previous_weekday(3, 1).isoformat(), sub.Periodicity.THURSDAY.value, 1, 1)
+    dbc.db_create_habit_sub(2, 4, get_previous_weekday(3, 1).isoformat(), get_previous_weekday(3, 1).isoformat(), sub.Periodicity.THURSDAY.value, 1, 1)
     dbc.db_create_completion(get_previous_weekday(3, 1).isoformat(), 2, 4)
     # Sub 5 -> Friday, completed: 2w ago, streak: 0|1
-    dbc.db_create_habit_sub(2, 5, date.today().isoformat(), get_previous_weekday(4, 2).isoformat(), sub.Periodicity.FRIDAY.value, 0, 1)
+    dbc.db_create_habit_sub(2, 5, get_previous_weekday(4, 2).isoformat(), get_previous_weekday(4, 2).isoformat(), sub.Periodicity.FRIDAY.value, 0, 1)
     dbc.db_create_completion(get_previous_weekday(4, 2).isoformat(), 2, 5)
     # Sub 6 -> Saturday, completed: 3w ago, streak: 0|1
-    dbc.db_create_habit_sub(2, 6, date.today().isoformat(), get_previous_weekday(5, 3).isoformat(), sub.Periodicity.SATURDAY.value, 0, 1)
+    dbc.db_create_habit_sub(2, 6, get_previous_weekday(5, 3).isoformat(), get_previous_weekday(5, 3).isoformat(), sub.Periodicity.SATURDAY.value, 0, 1)
     dbc.db_create_completion(get_previous_weekday(5, 3).isoformat(), 2, 6)
-    # Sub 7 -> Sunday, completed: 3w, 2w ago, streak: 0|2
-    dbc.db_create_habit_sub(2, 7, date.today().isoformat(), get_previous_weekday(6, 2).isoformat(), sub.Periodicity.SUNDAY.value, 0, 2)
+    # Sub 7 -> Sunday, completed: 3w, 2w ago, streak: 0|2 - creation date can be different than periodicity weekday
+    dbc.db_create_habit_sub(2, 7, get_previous_weekday(4, 3).isoformat(), get_previous_weekday(6, 2).isoformat(), sub.Periodicity.SUNDAY.value, 0, 2)
     dbc.db_create_completion(get_previous_weekday(6, 2).isoformat(), 2, 7)
     dbc.db_create_completion(get_previous_weekday(6, 3).isoformat(), 2, 7)
     # Sub 8 -> Daily, completed: last 5 days, excl. today, streak: 5|5
-    dbc.db_create_habit_sub(2, 8, date.today().isoformat(), date.today().isoformat(), sub.Periodicity.DAILY.value, 5, 5)
+    dbc.db_create_habit_sub(2, 8, (date.today() - timedelta(days=5)).isoformat(), (date.today() - timedelta(days=1)).isoformat(), sub.Periodicity.DAILY.value, 5, 5)
     for i in range(1, 6):
         dbc.db_create_completion((date.today() - timedelta(days=i)).isoformat(), 2, 8)
     # Sub 9 -> Daily, completed: 12 days, then 3 days break, 3 days, then 5 days break, then 2 days incl. today, streak: 2|4
-    dbc.db_create_habit_sub(2, 9, date.today().isoformat(), date.today().isoformat(), sub.Periodicity.DAILY.value, 2, 4)
+    dbc.db_create_habit_sub(2, 9, (date.today() - timedelta(days=12+3+3+5+2)).isoformat(), date.today().isoformat(), sub.Periodicity.DAILY.value, 2, 4)
     for i in range(12+3+3+5+2):
         if (i >= 2 and i < 7) or (i >= 10 and i < 13): # break 1 & 2
             continue
         dbc.db_create_completion((date.today() - timedelta(days=i)).isoformat(), 2, 9)
     # Sub 10 -> Weekly, completed: today, last 3 sundays, streak: 4|4
-    dbc.db_create_habit_sub(2, 10, date.today().isoformat(), date.today().isoformat(), sub.Periodicity.WEEKLY.value, 4, 4)
+    dbc.db_create_habit_sub(2, 10, get_previous_weekday(6, 1).isoformat(), date.today().isoformat(), sub.Periodicity.WEEKLY.value, 4, 4)
     dbc.db_create_completion(get_previous_weekday(6, 3).isoformat(), 2, 10)
     dbc.db_create_completion(get_previous_weekday(6, 2).isoformat(), 2, 10)
     dbc.db_create_completion(get_previous_weekday(6, 1).isoformat(), 2, 10)

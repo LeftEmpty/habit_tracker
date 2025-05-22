@@ -23,7 +23,7 @@ class ScreenBase(ttk.Frame, ABC):
         Screens should overwrite to implement specifics, such as creating widgets / init layout, then call"""
         # Default setup for all screens
         self.config(style="ContentArea.TFrame")
-        self.title_label = ttk.Label(self, text="", anchor="w", font=("TkDefaultFont", 22, "bold"))
+        self.title_label = ttk.Label(self, text="", anchor="w", font=("TkDefaultFont", 26, "bold"))
         self.title_label.grid(row=0, column=0, columnspan=2, pady=8, padx=8, sticky="w")
 
         # Debugging

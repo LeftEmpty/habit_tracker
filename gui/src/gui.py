@@ -10,6 +10,7 @@ from gui.util.gui_themes import ThemeManager
 from gui.src.screen import ScreenBase
 from gui.src.front_screen import FrontScreen
 from gui.src.home_screen import HomeScreen
+from gui.src.stats_screen import StatsScreen
 
 from obj.src.user import User
 
@@ -33,7 +34,8 @@ class GUI:
         # Initialize and store screen references in Dictionary
         self.screens: Dict[str, ScreenBase] = {
             "front" : FrontScreen(self.content_area, self),
-            "home" : HomeScreen(self.content_area, self)
+            "home" : HomeScreen(self.content_area, self),
+            "stats" : StatsScreen(self.content_area, self)
             # stats
             # habit
         }
@@ -138,6 +140,8 @@ class GUI:
 
     def open_screen_home(self) -> None:
         self.open_screen("home")
+    def open_screen_stats(self) -> None:
+        self.open_screen("stats")
 
     def open_screen(self, screen_name: str) -> None:
         """Destroys current screen frame and opens a new one inside content_area."""

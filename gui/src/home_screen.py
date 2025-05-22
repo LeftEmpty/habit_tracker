@@ -37,7 +37,8 @@ class HomeScreen(ScreenBase):
         self.add_habit_btn.grid(row=3, column=1, padx=8, pady=18, sticky="e")
 
     def _init_habit_list(self) -> None:
-        """Initializes the habit list, should be called on open_screen_event, we need a valid user"""
+        """Initializes the habit list, should be called on open_screen_event, we need a valid user.
+        (User object is not yet constructed when this screen is setup during gui initialization.)"""
         if self.owning_gui.cur_user is None:
             return
 
@@ -60,9 +61,11 @@ class HomeScreen(ScreenBase):
         pass
 
     def on_open_screen_event(self) -> None:
-        """Sets up habit list & updates sidebar after log in"""
+        """Essentially the on login function, as this one of the first things that fires once the user logs in.
+        Sets up habit list & updates sidebar after log in."""
         self._init_habit_list()
         self.owning_gui.populate_sidebar("Home", 0, self.owning_gui.open_screen_home)
+        self.owning_gui.populate_sidebar("Statistics", 1, self.owning_gui.open_screen_stats)
         self.owning_gui.populate_sidebar("Logout", 8, self.owning_gui.logout)
 
     def _get_user_subs_list(self) -> list["HabitSubscription"]:

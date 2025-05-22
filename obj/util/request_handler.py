@@ -314,9 +314,9 @@ def get_all_sub_completions_for_user(user_id:int, sub_id:int) -> list[Completion
     for r in result:
         completions.append(
             Completion(
-                user_id=r[0],
-                habit_sub_id=r[1],
-                compl_date=datetime.strptime(r[2], "%Y-%m-%d").date()
+                compl_date=datetime.strptime(r[0], "%Y-%m-%d").date(),
+                user_id=r[1],
+                habit_sub_id=r[2]
             )
         )
     return completions
