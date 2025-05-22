@@ -225,7 +225,7 @@ def db_get_habit_data_by_id(data_id:int, conn:Connection = Connection.FILE) -> l
             """
             SELECT * FROM habit_data WHERE habit_data_id = ?
             """,
-            str(data_id)
+            (data_id,)
         )
         return result.fetchall()
     except sqlite3.Error as e:
@@ -279,7 +279,7 @@ def db_get_subs_count_for_habit(habit_id:int, conn:Connection=Connection.FILE) -
             """
             SELECT COUNT(*) FROM habit_subscription WHERE habit_id = ?
             """,
-            str(habit_id)
+            (habit_id,)
         )
         return result.fetchone()[0]
     except sqlite3.Error as e:
