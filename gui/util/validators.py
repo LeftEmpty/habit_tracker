@@ -31,7 +31,7 @@ def contains_naughty_stuff(*args: str) -> bool:
     funny_checks = [
         "DROP TABLE", "SELECT * FROM", "WHERE 1=1", "--", ";",
         "xp_cmdshell", "UNION", "' OR '1'='1", "exec(",
-        "insert into", "delete from", "admin", "root",
+        "insert into", "delete from", "root",
     ]
 
     for arg in args:

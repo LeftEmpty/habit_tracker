@@ -63,7 +63,7 @@ class HabitData:
         Returns:
             int: returns the ID of the habit data entry (even if it's already registered), ERROR CODE: -1 [incomplete data]
         """
-        if not self.is_complete():
+        if not self.is_data_complete():
             print(f"Habit \"{self.name}\" cannot register, incomplete data.")
             return -1
         if self.id >=0:
@@ -80,7 +80,7 @@ class HabitData:
             print(f"Error: Habit couldnt register \"{self.name}\" self to database.")
             return -1
 
-    def is_complete(self) -> bool:
+    def is_data_complete(self) -> bool:
         """Checks that all dada required to register has been set
 
         Returns:

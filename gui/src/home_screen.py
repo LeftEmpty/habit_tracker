@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from gui.src.screen import ScreenBase
-from gui.util.gui_enums import HabitQuerryCondition, HabitListMode
+from gui.util.gui_enums import HabitQueryCondition, HabitListMode
 from gui.util.widgets import HabitSubListWidget, HabitCreationPopup
 
 # forward declaring for better type checking / overview
@@ -69,7 +69,7 @@ class HomeScreen(ScreenBase):
         """"""
         # get all habits
         if self.owning_gui.cur_user:
-            return self.owning_gui.cur_user.get_subscribed_habits(HabitQuerryCondition.ALL)
+            return self.owning_gui.cur_user.get_subscribed_habits(HabitQueryCondition.RELEVANT_TODAY)
         else:
             print("Invalid user")
             return []

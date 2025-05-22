@@ -31,9 +31,10 @@ class HabitListMode(Enum):
     SUB = "sub"
     DATA = "data"
 
-class HabitQuerryCondition(Enum):
+class HabitQueryCondition(Enum):
     """Condition that can be passed when habits are querried to adjust result."""
     NONE = "NONE",
     ALL = "ALL"
+    RELEVANT_TODAY = "RELEVANT TODAY" # revelant for the day
     DUE = "DUE",
     COMPLETED = "COMPLETED"

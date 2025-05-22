@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Optional, Callable
 
-from gui.util.gui_enums import InputResponse, HabitListMode
+from gui.util.gui_enums import InputResponse, HabitListMode, HabitQueryCondition
 from obj.src.habit import HabitData
 from obj.src.subscription import HabitSubscription, Periodicity
 
@@ -89,14 +89,14 @@ class HabitSubListWidget(ttk.Frame):
         # update widget list
         if self.cur_mode == HabitListMode.SUB:
             if self.owning_user:
-                self.subs = self.owning_user.habit_subs
+                self.subs = self.owning_user.get_subscribed_habits(HabitQueryCondition.RELEVANT_TODAY)
         else:
             # @TODO
             pass
 
         # destroy old widgets
+        print ("HabistSubList is being re-populated due to refresh.")
         for widget in self.container.scrollable_frame.winfo_children():
-            print ("habist sub list, sub widget being destoryed due to refresh: " + widget.winfo_name())
             widget.destroy()
 
         # repopulate widgets
