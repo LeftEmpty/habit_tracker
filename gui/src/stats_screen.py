@@ -22,6 +22,8 @@ class StatsScreen(ScreenBase):
         """
         super().__init__(root, gui)
 
+        self.stats_container = ttk.Frame(self, style="Sidebar.TFrame")
+
     def setup_screen(self) -> None:
         """Inherited setup screen function.
         Builds UI of the home screen in this case."""
@@ -71,7 +73,6 @@ class StatsScreen(ScreenBase):
         rate:tuple[int,int,float] = self.cur_selected_sub.get_completion_rate()
 
         # widgets
-        self.stats_container = ttk.Frame(self, style="Sidebar.TFrame")
         self.stats_container.grid(row=5, column=0, padx=8, pady=18, sticky="ew")
 
         ttk.Label(self.stats_container, style="Sidebar.TLabel", text=f"{self.cur_selected_sub.habit_data.name} - details", font=("TkDefaultFont", 14, "bold"))\
@@ -99,7 +100,8 @@ class StatsScreen(ScreenBase):
         """"""
         self.subs = self._get_user_subs_list()
         self._init_habit_dropdown()
-        self.stats_container.grid_forget()
+        if self.stats_container:
+            self.stats_container.grid_forget()
 
     def _get_user_subs_list(self) -> list["HabitSubscription"]:
         """"""
