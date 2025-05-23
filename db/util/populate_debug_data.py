@@ -37,20 +37,20 @@ def populate_all() -> None:
         ("Walk the dog", "Don't say it out loud."),
         ("Drink water", "At least 6 cups."),
     ]
-    for habit_name, habit_desc in HABITS:
+    for i, (habit_name, habit_desc) in enumerate(HABITS):
         dbc.db_create_habit_data(
             author_user_id=2,
             author_display_name="Alice",
             habit_name=habit_name,
             habit_desc=habit_desc,
-            b_public=random.choice([True, False]),
+            b_public=(i % 2 == 0),
             b_official=False,
             last_modified=random.choice(["", datetime.today().isoformat()])
         )
-    # 3 public by bob
+    # 2 public / 1 private by bob
     dbc.db_create_habit_data(3, "Bob", "Bob's Habit 1", "Public test habit.", True, False)
-    dbc.db_create_habit_data(3, "Bob", "Bob's Habit 2", "Public test habit.", True, False)
-    dbc.db_create_habit_data(3, "Bob", "Bob's Habit 3", "Public test habit.", True, False)
+    dbc.db_create_habit_data(3, "Bob", "Bob's Habit 2", "Public test habit with a longer descrpition.", True, False)
+    dbc.db_create_habit_data(3, "Bob", "Bob's Habit 3", "'Private' test habit.", False, False)
 
     # HabitSubscriptions
     print("Creating Subscriptions & Completions...")
