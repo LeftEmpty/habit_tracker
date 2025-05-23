@@ -20,6 +20,10 @@ class InputResponse(Enum):
     USR_NOTFOUND = "Wrong login information."
     NAUGHTY = "Dont do that, you know what you did =)"
 
+    # Habits
+    NOT_AUTHOR = "Only the author can edit a habit."
+    NO_PERIODICITY = "Please choose a periodicity."
+
 
 class GUITheme(Enum):
     DEFAULT = "default"

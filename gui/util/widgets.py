@@ -71,12 +71,10 @@ class HabitSubListWidget(ttk.Frame):
                     widget = SubWidget(self, self.owning_gui, s)
                     widget.pack(fill="x", pady=2, expand=True)
         else:
-            # @TODO
             if self.habits and len(self.habits) > 0:
                 for h in self.habits:
-                    #widget = SubWidget(self, h)
-                    #widget.pack(fill="x", pady=2)
-                    pass
+                    widget = HabitWidget(self, self.owning_gui, h)
+                    widget.pack(fill="x", pady=2)
 
     def reload_list(self) -> None:
         """Used to update / refresh the list after construction.
@@ -91,8 +89,8 @@ class HabitSubListWidget(ttk.Frame):
             if self.owning_user:
                 self.subs = self.owning_user.get_subscribed_habits(HabitQueryCondition.RELEVANT_TODAY)
         else:
-            # @TODO
-            pass
+            if self.owning_user:
+                self.habits = self.owning_user.get_all_non_subbed_public_habits()
 
         # destroy old widgets
         print ("HabistSubList is being re-populated due to refresh.")
@@ -101,6 +99,67 @@ class HabitSubListWidget(ttk.Frame):
 
         # repopulate widgets
         self._populate_list()
+
+
+class HabitWidget(ttk.Frame):
+    def __init__(self, parent_list:HabitSubListWidget, owning_gui:"GUI", data:HabitData):
+        """List item for HabitSubListWidget.
+        Widget for a single habit subscription entry in a HabitListWidget.
+
+        Args:
+            parent_list (HabitSubListWidget): Owning list widget.
+            owning_gui (GUI): root gui of this app.
+            sub (HabitSubscription): habit sub that is represented by this widget.
+        """
+        super().__init__(parent_list.container.scrollable_frame)
+
+        self.config(style="Sidebar.TFrame")
+        self.columnconfigure(0, weight=8)
+        self.columnconfigure(1, weight=1)
+        self.columnconfigure(2, weight=1)
+
+        self.parent_list = parent_list
+        self.owning_gui = owning_gui
+        self.data = data
+
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        """Build basic widget layout"""
+        self.name_label = ttk.Label(self, text=self.data.name, style="Sidebar.TLabel")
+        self.name_label.grid(row=0, column=0, padx=8, pady=8, sticky="w")
+
+        desc = self.data.desc if len(self.data.desc) < 25 else str(self.data.desc[:25] + "..")
+        self.desc_label = ttk.Label(self, text=f"-> {desc}", style="Sidebar.TLabel", font=("TkDefaultFont", 10, "italic"))
+        self.desc_label.grid(row=1, column=0, padx=8, pady=8, sticky="w")
+
+        self.sub_btn:ttk.Button = ttk.Button(self, text="[+]", command=self._subscribe)
+        self.sub_btn.grid(row=0, column=2, pady=4, padx=8, sticky="e")
+
+        self.periodicity_var = tk.StringVar()
+        self.periodicity_menu = ttk.Combobox(self, textvariable=self.periodicity_var, state="readonly")
+        self.periodicity_menu['values'] = [p.value for p in Periodicity]
+        self.periodicity_menu.grid(row=1, column=1, columnspan=2, padx=8, pady=8, sticky="e")
+
+    def _subscribe(self):
+        """Type check periodicity, then create new subscription based on this widgets habit data for the current user.
+        Finally on success, update the user's subscribed habits and reload the parent list."""
+        if not self.periodicity_var.get():
+            self.owning_gui.give_input_feedback(InputResponse.NO_PERIODICITY)
+            return
+
+        if self.data and self.owning_gui.cur_user:
+            new_sub:HabitSubscription = HabitSubscription(
+                user_id=self.owning_gui.cur_user.user_id,
+                data_id=self.data.id,
+                periodicity=self.periodicity_var.get(),
+                cur_streak=0,
+                max_streak=0,
+                last_completed_date=None
+            )
+            if new_sub:
+                self.owning_gui.cur_user.update_subscribed_habits()
+                self.parent_list.reload_list()
 
 
 class SubWidget(ttk.Frame):
@@ -155,18 +214,23 @@ class SubWidget(ttk.Frame):
         self.parent_list.reload_list()
 
     def edit(self):
+        """Opens HabitEditPopup after null-checking, only allows action if current user is author of habit."""
         if self.sub and self.owning_gui.cur_user:
-            HabitEditPopup(self.owning_gui, self.owning_gui.cur_user, self.sub, self.parent_list.reload_list)
+            b_is_author:bool = self.owning_gui.cur_user.user_id == self.sub.habit_data.author_id
+            HabitEditPopup(self.owning_gui, self.owning_gui.cur_user, self.sub, b_is_author,self.parent_list.reload_list)
+        elif self.owning_gui:
+            self.owning_gui.give_input_feedback(InputResponse.NOT_AUTHOR)
 
 
 class HabitEditPopup(tk.Toplevel):
-    def __init__(self, root_gui:"GUI", user:"User", sub:HabitSubscription, on_creation_callback:Callable[[], None]):
+    def __init__(self, root_gui:"GUI", user:"User", sub:HabitSubscription, b_is_author:bool, on_creation_callback:Callable[[], None]):
         """Popup window Widget used to enter habit subscriptions.
 
         Args:
             root_gui (GUI): _description_
             user (User): _description_
             sub (HabitSubscription): _description_
+            b_is_author (bool): user currently editing is author of habit.
             on_save (_type_, optional): _description_. Defaults to None.
         """
         if not user or not root_gui:
@@ -183,7 +247,7 @@ class HabitEditPopup(tk.Toplevel):
         self.on_creation_callback = on_creation_callback
 
         self._init_vars()
-        self._build_ui()
+        self._build_ui(b_is_author)
 
     def _init_vars(self):
         # Fill in with defaults or existing values
@@ -197,46 +261,69 @@ class HabitEditPopup(tk.Toplevel):
         else:
             self.periodicity_var.set(Periodicity.DAILY.value)
 
-    def _build_ui(self):
+    def _build_ui(self, b_author_ui:bool):
         frame = ttk.Frame(self, padding=22, style="ContentArea.TFrame")
         frame.pack(fill="both", expand=True)
         frame.columnconfigure(0, weight=1)
         frame.columnconfigure(1, weight=2)
 
-        ttk.Label(frame, text="Edit Habit", font=("TkDefaultFont", 22, "bold")).grid(pady=16, row=0, column=0, columnspan=3, sticky="w")
+        if b_author_ui:
+            ttk.Label(frame, text="Edit Habit", font=("TkDefaultFont", 22, "bold")).grid(pady=16, row=0, column=0, columnspan=3, sticky="w")
 
-        ttk.Label(frame, text="Habit Name").grid(row=1, column=0, sticky="w")
-        self.name_entry = ttk.Entry(frame, textvariable=self.name_var)
-        self.name_entry.grid(row=1, column=1, columnspan=2, pady=8, sticky="ew")
+            ttk.Label(frame, text="Habit Name").grid(row=1, column=0, sticky="w")
+            self.name_entry = ttk.Entry(frame, textvariable=self.name_var)
+            self.name_entry.grid(row=1, column=1, columnspan=2, pady=8, sticky="ew")
 
-        ttk.Label(frame, text="Description").grid(row=2, column=0, sticky="w")
-        self.desc_entry = ttk.Entry(frame, textvariable=self.desc_var)
-        self.desc_entry.grid(row=2, column=1, columnspan=2, pady=8, sticky="ew")
+            ttk.Label(frame, text="Description").grid(row=2, column=0, sticky="w")
+            self.desc_entry = ttk.Entry(frame, textvariable=self.desc_var)
+            self.desc_entry.grid(row=2, column=1, columnspan=2, pady=8, sticky="ew")
 
-        ttk.Label(frame, text="Public").grid(row=3, column=0, sticky="w")
-        self.public_check = ttk.Checkbutton(frame, variable=self.public_var)
-        self.public_check.grid(row=3, column=1, pady=8, sticky="ew")
+            ttk.Label(frame, text="Public").grid(row=3, column=0, sticky="w")
+            self.public_check = ttk.Checkbutton(frame, variable=self.public_var)
+            self.public_check.grid(row=3, column=1, pady=8, sticky="ew")
 
-        ttk.Label(frame, text="Periodicity").grid(row=4, column=0, sticky="w")
-        self.periodicity_menu = ttk.Combobox(frame, textvariable=self.periodicity_var, state="readonly")
-        self.periodicity_menu['values'] = [p.value for p in Periodicity]
-        self.periodicity_menu.grid(row=4, column=1, columnspan=2, pady=8, sticky="ew")
+            #! LEGACY - removed periodicity editing for now
+            #ttk.Label(frame, text="Periodicity").grid(row=4, column=0, sticky="w")
+            #self.periodicity_menu = ttk.Combobox(frame, textvariable=self.periodicity_var, state="readonly")
+            #self.periodicity_menu['values'] = [p.value for p in Periodicity]
+            #self.periodicity_menu.grid(row=4, column=1, columnspan=2, pady=8, sticky="ew")
 
-        self.save_btn = ttk.Button(frame, text="Save", command=self._on_save)
-        self.save_btn.grid(row=5, column=0, padx=8, pady=18)
-        self.delete_btn = ttk.Button(frame, text="Delete", command=self._on_delete)
-        self.delete_btn.grid(row=5, column=1, padx=8, pady=18)
-        self.cancel_btn = ttk.Button(frame, text="Cancel", command=self.destroy)
-        self.cancel_btn.grid(row=5, column=2, padx=8, pady=18)
+            ttk.Label(frame, text="Periodicity: ").grid(row=4, column=0, sticky="w")
+            ttk.Label(frame, text=f"[{self.sub.periodicity.value}].").grid(row=4, column=1, columnspan=2, pady=8, sticky="w")
+            ttk.Label(frame, text="Editing periodicity is currently not supported.", font=("TkDefaultFont", 10, "italic"))\
+                .grid(row=5, column=0, columnspan=3, sticky="w")
+
+            self.save_btn = ttk.Button(frame, text="Save", command=self._on_save)
+            self.save_btn.grid(row=6, column=0, padx=8, pady=18)
+            self.delete_btn = ttk.Button(frame, text="Delete", command=self._on_delete)
+            self.delete_btn.grid(row=6, column=1, padx=8, pady=18)
+            self.cancel_btn = ttk.Button(frame, text="Cancel", command=self.destroy)
+            self.cancel_btn.grid(row=6, column=2, padx=8, pady=18)
+
+        else:
+            ttk.Label(frame, text="Delete Habit?", font=("TkDefaultFont", 22, "bold")).grid(pady=16, row=0, column=0, columnspan=3, sticky="w")
+
+            ttk.Label(frame, text=f"Habit Name: {self.sub.habit_data.name}").grid(row=1, column=0, columnspan=3, sticky="w")
+            ttk.Label(frame, text=f"Habit Desc: {self.sub.habit_data.desc}").grid(row=2, column=0, columnspan=3, sticky="w")
+            ttk.Label(frame, text=f"Periodicity: {self.sub.periodicity.value}").grid(row=3, column=0, columnspan=3, sticky="w")
+
+            ttk.Label(frame, text=f"Author: {self.sub.habit_data.author_name}").grid(row=4, column=0, columnspan=3, sticky="w")
+            ttk.Label(frame, text="Cannot edit a habit you didn't author.", font=("TkDefaultFont", 10, "italic"))\
+                .grid(row=5, column=0, columnspan=3, sticky="w")
+
+            self.delete_btn = ttk.Button(frame, text="Delete", command=self._on_delete)
+            self.delete_btn.grid(row=6, column=0, padx=8, pady=18)
+            self.cancel_btn = ttk.Button(frame, text="Cancel", command=self.destroy)
+            self.cancel_btn.grid(row=6, column=2, padx=8, pady=18)
 
         frame.columnconfigure(1, weight=1)
         self.columnconfigure(1, weight=1)
 
     def _on_delete(self):
-        """Cancels the subscription (might delete it, logic handled in sub)
+        """Cancels the subscription (might delete it, logic handled in sub) and updates users sub list.
         Then calls callback to list, gives feedback, and destroys self(popup)"""
         self.sub.on_cancel_subscription()
-        self.user.get_subscribed_habits(HabitQueryCondition.ALL)
+        self.user.update_subscribed_habits()
 
         if self.on_creation_callback:
             self.on_creation_callback()
@@ -250,7 +337,7 @@ class HabitEditPopup(tk.Toplevel):
         if self.habit_data is None or self.sub is None: return
 
         # Validate input
-        if self.name_entry.get() == "" or self.desc_entry == "" or self.periodicity_var == tk.StringVar():
+        if self.name_entry.get() == "" or self.desc_entry == "": #or self.periodicity_var == tk.StringVar():
             self.root_gui.give_input_feedback(InputResponse.EMPTY_FIELDS)
 
         # Update sub & data
@@ -259,7 +346,7 @@ class HabitEditPopup(tk.Toplevel):
             new_desc=self.desc_var.get(),
             b_public=self.public_var.get()
         )
-        self.sub.modify_sub(self.periodicity_var.get())
+        #self.sub.modify_sub(self.periodicity_var.get())
 
         self.user.update_subscribed_habits()
 
@@ -325,8 +412,6 @@ class HabitCreationPopup(tk.Toplevel):
         """Creates HabitData and HabitSubscription objects via the input entry fields. (Validates data first)
         Both objects register themselves to the DB.
         Finally refreshes widget list on home screen and destroys itself."""
-        # @TODO i don't like that this logic is in a widget class, might be better to move this to e.g. request_handler?
-
         # Validate input
         if self.name_entry.get() == "" or self.desc_entry == "" or not self.periodicity_var.get():
             self.root_gui.give_input_feedback(InputResponse.EMPTY_FIELDS)

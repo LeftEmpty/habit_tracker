@@ -67,6 +67,15 @@ class User:
     def update_subscribed_habits(self) -> None:
         self.habit_subs = self.get_subscribed_habits(HabitQueryCondition.ALL)
 
+    def get_all_non_subbed_public_habits(self) -> list[HabitData]:
+        """Returns a list of all public habits that the user is not subscribed to."""
+        #! doesn't scale well, limit queries to 20~100 a piece?
+        habits = request.get_all_public_habits()
+        subscribed_ids = {sub.data_id for sub in self.habit_subs}
+        # Return only those habits the user is not subscribed to
+        result = [habit for habit in habits if habit.id not in subscribed_ids]
+        return result
+
     def _on_login(self) -> None:
         """Called on login. Checks and updates completions, streaks, etc."""
         # @TODO

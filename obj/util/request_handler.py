@@ -153,12 +153,28 @@ def get_habit_data(data_id:int) -> Optional["HabitData"]:
     return HabitData(
         name=result[0][1],
         desc=result[0][2],
-        author_id=result[0][3],
-        author_name=result[0][4],
+        author_id=result[0][4],
+        author_name=result[0][3],
         b_public=result[0][5],
         b_official=result[0][6],
         habit_id=result[0][0]
     )
+
+def get_all_public_habits() -> list["HabitData"]:
+    result = dbc.db_get_public_habits()
+    from obj.src.habit import HabitData
+    habits:list[HabitData] = []
+    for r in result:
+        habits.append(HabitData(
+            name=r[1],
+            desc=r[2],
+            author_id=r[4],
+            author_name=r[3],
+            b_public=r[5],
+            b_official=r[6],
+            habit_id=r[0]
+        ))
+    return habits
 
 def get_habit_subs_count(habit_data_id:int) -> int:
     return dbc.db_get_subs_count_for_habit(habit_data_id)

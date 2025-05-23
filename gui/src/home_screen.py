@@ -33,7 +33,7 @@ class HomeScreen(ScreenBase):
         self.create_new_btn = ttk.Button(self, text="Create Habit", command=self._create_habit)
         self.create_new_btn.grid(row=3, column=0, padx=8, pady=18, sticky="w")
 
-        self.add_habit_btn = ttk.Button(self, text="Add Habit", command=self._add_habit)
+        self.add_habit_btn = ttk.Button(self, text="Add Habit", command=self.owning_gui.open_screen_publics)
         self.add_habit_btn.grid(row=3, column=1, padx=8, pady=18, sticky="e")
 
     def _init_habit_list(self) -> None:
@@ -55,17 +55,13 @@ class HomeScreen(ScreenBase):
         if self.owning_gui.cur_user:
             HabitCreationPopup(self.owning_gui, self.owning_gui.cur_user, self.habit_list.reload_list)
 
-    def _add_habit(self) -> None:
-        """Changes gui to the PublicHabitsScreen to let User browse habits"""
-        self.owning_gui.open_screen("public_habits")
-        pass
-
     def on_open_screen_event(self) -> None:
         """Essentially the on login function, as this one of the first things that fires once the user logs in.
         Sets up habit list & updates sidebar after log in."""
         self._init_habit_list()
         self.owning_gui.populate_sidebar("Home", 0, self.owning_gui.open_screen_home)
         self.owning_gui.populate_sidebar("Statistics", 1, self.owning_gui.open_screen_stats)
+        self.owning_gui.populate_sidebar("Public Habits", 2, self.owning_gui.open_screen_publics)
         self.owning_gui.populate_sidebar("Logout", 8, self.owning_gui.logout)
 
     def _get_user_subs_list(self) -> list["HabitSubscription"]:
