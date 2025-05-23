@@ -81,7 +81,9 @@ class HabitSubscription:
         self.id:int = sub_id
         self.data_id:int = data_id
         self.owner_id:int = user_id
-        self.creation_date:date = self._normalize_date(creation_date)
+        cd:date|None = self._normalize_date(creation_date)
+        if cd:
+            self.creation_date:date = cd
         self.last_completed_date:date|None = last_completed_date
         if last_completed_date != None:
             self.last_completed_date = self._normalize_date(last_completed_date)
@@ -155,10 +157,13 @@ class HabitSubscription:
         else:
             raise TypeError(f"Expected str or Periodicity, got {type(value)}")
 
-    def _normalize_date(self, d:date|str) -> date:
+    def _normalize_date(self, d:date|str) -> date|None:
         if isinstance(d, date):
             return d
-        return datetime.strptime(d, "%Y-%m-%d").date()
+        if d == "":
+            return None
+        dt = datetime.strptime(d, "%Y-%m-%d").date()
+        return dt
 
     def _periodicty_relevant_today(self) -> bool:
         """Checks if subscription's periodicity weekday is same as todays, which makes it relevant.
@@ -306,15 +311,12 @@ class HabitSubscription:
         """Event that should be called when a user cancels this subscription,
         When the user was the last subscriber to the used habit (data), then also delete that habit (only unofficial)"""
         # delete habit data and subscription
+        request.delete_habit_sub(self.id)
         if (not self.habit_data.b_public) or (self.habit_data.get_subscriber_count() <= 1 and self.habit_data.author_id == self.owner_id):
             request.delete_habit_data(self.data_id)
-        request.delete_habit_sub(self.id)
 
         # delete all completions for this sub
         request.delete_all_sub_completions_for_user(self.owner_id, self.id)
-        #for c in request.get_all_sub_completions_for_user(self.owner_id, self.id):
-        #    if not request.delete_completion(self.owner_id, self.id, c.compl_date):
-        #        print(f"Error deleting all completions for sub with ID {self.id} on user {self.owner_id}")
 
         #del self
 
