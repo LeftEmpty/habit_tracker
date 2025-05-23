@@ -3,7 +3,7 @@ from obj.src.subscription import HabitSubscription
 from gui.util.gui_enums import HabitQueryCondition
 import obj.util.request_handler as request
 
-from datetime import date
+from datetime import date, timedelta
 
 
 class User:
@@ -78,5 +78,6 @@ class User:
 
     def _on_login(self) -> None:
         """Called on login. Checks and updates completions, streaks, etc."""
-        # @TODO
-        pass
+        # check if streaks broken
+        for sub in self.habit_subs:
+            sub.check_streak_broken()

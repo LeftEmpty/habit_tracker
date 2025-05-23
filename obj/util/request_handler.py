@@ -54,6 +54,7 @@ def try_login_user(try_usr:str, try_pw:str, gui:"GUI") -> InputResponse:
     )
     if user != None:
         gui.cur_user = user
+        user._on_login()
         # user.habit_subs = set(get_subs_for_user(user.user_id)) # now done in constructor
         return InputResponse.SUCCESS
     else:

@@ -320,6 +320,31 @@ class HabitSubscription:
 
         #del self
 
+    def check_streak_broken(self) -> None:
+        """Checks if current streak is broken, i.e. should be reset and does so when applicable."""
+        today = date.today()
+        expected_latest:date
+        if not self.last_completed_date:
+            if self.cur_streak != 0:
+                self.cur_streak = 0
+                request.update_sub_entry(self)
+                return
+        else:
+            if self.periodicity == Periodicity.DAILY:
+                # DAILY - Broken if last completed more than 1 day ago
+                expected_latest:date = today - timedelta(days=1)
+            elif self.periodicity == Periodicity.WEEKLY:
+                # WEEKLY - Broken if last completed 2 weeks ago (i.e. last week + currently started week)
+                expected_latest = today - timedelta(days=7 + today.weekday())
+            else:
+                # WEEKDAY - Broken if last completed longer than last weekday ago (i.e. 8)
+                expected_latest = today - timedelta(days=7)
+
+            if self.last_completed_date < expected_latest:
+                print(f"Streak broken on sub [id:{self.id}|({self.habit_data.name})]")
+                self.cur_streak = 0
+                request.update_sub_entry(self)
+
     def modify_sub(self, periodicity:Periodicity|str) -> None:
         """Modifies this subs data & modifies entry in db"""
         p = self._normalize_periodicity(periodicity)
