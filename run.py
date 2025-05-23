@@ -2,7 +2,6 @@ from gui.src.gui import GUI
 import db.src.controller as dbc
 import db.util.populate_debug_data as pdd
 # import atexit
-from datetime import date
 import argparse
 
 def main(debug:bool) -> None:
@@ -17,9 +16,6 @@ def main(debug:bool) -> None:
     gui.__start__() # starts GUI mainloop
 
 if __name__ == "__main__":
-    # TEMP
-    # export PYTHONPATH=/home/pocra/Documents/projects/habit_tracker:$PYTHONPATH
-
     parser = argparse.ArgumentParser(description="Habit Tracker Application")
     parser.add_argument(
         "--debug",
