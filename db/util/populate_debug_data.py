@@ -8,7 +8,7 @@ import db.src.controller as dbc
 
 def populate_all() -> None:
     #  Init
-    print("CREATING DUMMY DATA.")
+    print("------- CREATING DUMMY DATA. -------")
     print("Dropping tables...")
     dbc.db_drop_all()
     print("Reinitializing db...")
@@ -94,9 +94,23 @@ def populate_all() -> None:
     dbc.db_create_completion(get_previous_weekday(6, 2).isoformat(), 2, 10)
     dbc.db_create_completion(get_previous_weekday(6, 1).isoformat(), 2, 10)
 
-    print("FINISHED CREATING DEBUG DUMMY DATA.")
+    # Sub 11 (Bob) -> Daily, completed: last 5 days, excl. today, streak: 5|5
+    dbc.db_create_habit_sub(3, 11, (date.today() - timedelta(days=5)).isoformat(), (date.today() - timedelta(days=1)).isoformat(), sub.Periodicity.DAILY.value, 5, 5)
+    for i in range(1, 6):
+        dbc.db_create_completion((date.today() - timedelta(days=i)).isoformat(), 3, 11)
+    # Sub 12 (Bob) -> Daily, completed: last 6 days, incl. today, streak: 7|7
+    dbc.db_create_habit_sub(3, 12, (date.today() - timedelta(days=7)).isoformat(), (date.today()).isoformat(), sub.Periodicity.DAILY.value, 7, 7)
+    for i in range(7):
+        dbc.db_create_completion((date.today() - timedelta(days=i)).isoformat(), 3, 12)
+    # Sub 13 (Bob) -> Daily, completed: 15 days, 5 days break
+    dbc.db_create_habit_sub(3, 13, (date.today() - timedelta(days=15+5)).isoformat(), (date.today() - timedelta(days=5)).isoformat(), sub.Periodicity.DAILY.value, 0, 15)
+    for i in range(15+5):
+        if (i < 5): # 5 day break
+            continue
+        dbc.db_create_completion((date.today() - timedelta(days=i)).isoformat(), 3, 13)
+
+    print("------- FINISHED CREATING DEBUG DUMMY DATA. -------")
     print("Login using username: \"alice\" or \"bob\" and password: \"password123\".")
-    print("Bob is an empty test account, while the alice account contains dummy data.")
 
 def get_previous_weekday(target_weekday:int, weeks_ago:int=1) -> date:
     """Returns the date of the `weeks_ago`-th previous occurrence of the target weekday.

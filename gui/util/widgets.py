@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from typing import Optional, Callable
+from typing import Optional, Callable, Dict
 
 from gui.util.gui_enums import InputResponse, HabitListMode, HabitQueryCondition
 from obj.src.habit import HabitData
@@ -452,3 +452,75 @@ class HabitCreationPopup(tk.Toplevel):
 
         self.destroy()
 
+
+class PeriodicityHabitListPopup(tk.Toplevel):
+    def __init__(self, root_gui:"GUI", subs:list[HabitSubscription]):
+        """"""
+        super().__init__(root_gui.root)
+
+        self.root_gui = root_gui
+        self.subs = subs
+
+        self.title("Habit Periodicity List")
+        self.geometry("600x600")
+
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        frame = ttk.Frame(self, padding=22, style="ContentArea.TFrame")
+        frame.pack(fill="both", expand=True)
+        frame.columnconfigure(0, weight=1)
+        frame.columnconfigure(1, weight=2)
+
+        ttk.Label(frame, text="Habit Periodicity List", font=("TkDefaultFont", 18, "bold")).pack(pady=4)
+
+        container:ScrollableFrame = ScrollableFrame(frame)
+        container.pack(fill='both', anchor='center')
+
+        ttk.Label(container.scrollable_frame, text="-- DAILY --",  anchor='center', font=("TkDefaultFont", 16, "bold")).pack(fill='x', pady=2)
+        self.container_daily:ttk.Frame = ttk.Frame(container.scrollable_frame, padding=12, style="Sidebar.TFrame")
+        self.container_daily.pack(fill='x')
+        ttk.Label(container.scrollable_frame, text="-- WEEKLY --",  anchor='center', font=("TkDefaultFont", 16, "bold")).pack(fill='x', pady=2)
+        self.container_weekly:ttk.Frame = ttk.Frame(container.scrollable_frame, padding=12, style="Sidebar.TFrame")
+        self.container_weekly.pack(fill='x')
+        ttk.Label(container.scrollable_frame, text="-- MONDAYS --",  anchor='center', font=("TkDefaultFont", 16, "bold")).pack(fill='x', pady=2)
+        self.container_mon:ttk.Frame = ttk.Frame(container.scrollable_frame, padding=12, style="Sidebar.TFrame")
+        self.container_mon.pack(fill='x')
+        ttk.Label(container.scrollable_frame, text="-- TUESDAYS --",  anchor='center', font=("TkDefaultFont", 16, "bold")).pack(fill='x', pady=2)
+        self.container_tue:ttk.Frame = ttk.Frame(container.scrollable_frame, padding=12, style="Sidebar.TFrame")
+        self.container_tue.pack(fill='x')
+        ttk.Label(container.scrollable_frame, text="-- WEDNESDAYS --",  anchor='center', font=("TkDefaultFont", 16, "bold")).pack(fill='x', pady=2)
+        self.container_wed:ttk.Frame = ttk.Frame(container.scrollable_frame, padding=12, style="Sidebar.TFrame")
+        self.container_wed.pack(fill='x')
+        ttk.Label(container.scrollable_frame, text="-- THURSDAYS --",  anchor='center', font=("TkDefaultFont", 16, "bold")).pack(fill='x', pady=2)
+        self.container_thu:ttk.Frame = ttk.Frame(container.scrollable_frame, padding=12, style="Sidebar.TFrame")
+        self.container_thu.pack(fill='x')
+        ttk.Label(container.scrollable_frame, text="-- FRIDAYS --",  anchor='center', font=("TkDefaultFont", 16, "bold")).pack(fill='x', pady=2)
+        self.container_fri:ttk.Frame = ttk.Frame(container.scrollable_frame, padding=12, style="Sidebar.TFrame")
+        self.container_fri.pack(fill='x')
+        ttk.Label(container.scrollable_frame, text="-- SATURDAYS --",  anchor='center', font=("TkDefaultFont", 16, "bold")).pack(fill='x', pady=2)
+        self.container_sat:ttk.Frame = ttk.Frame(container.scrollable_frame, padding=12, style="Sidebar.TFrame")
+        self.container_sat.pack(fill='x')
+        ttk.Label(container.scrollable_frame, text="-- SUNDAYS --",  anchor='center', font=("TkDefaultFont", 16, "bold")).pack(fill='x', pady=2)
+        self.container_sun:ttk.Frame = ttk.Frame(container.scrollable_frame, padding=12, style="Sidebar.TFrame")
+        self.container_sun.pack(fill='x')
+
+
+        # Add widgets to appropriate container via periodicity
+        container_dict:Dict[Periodicity, ttk.Frame] = {
+            Periodicity.DAILY : self.container_daily,
+            Periodicity.WEEKLY : self.container_weekly,
+            Periodicity.MONDAY : self.container_mon,
+            Periodicity.TUESDAY : self.container_tue,
+            Periodicity.WEDNESDAY : self.container_wed,
+            Periodicity.THURSDAY : self.container_thu,
+            Periodicity.FRIDAY : self.container_fri,
+            Periodicity.SATURDAY : self.container_sat,
+            Periodicity.SUNDAY : self.container_sun
+        }
+        for s in self.subs:
+            ttk.Label(container_dict[s.periodicity], text=f"Habit: {s.habit_data.name}\nDesc: {s.habit_data.desc}\nAuthor: {s.habit_data.author_name}").pack(fill='x', pady=4)
+
+        ttk.Button(frame, text="Close", command=self.destroy).pack(fill='x', pady=12)
+
+        self.columnconfigure(1, weight=1)
