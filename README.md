@@ -27,7 +27,7 @@ Each habit is linked to user-specific progress, and optionally shared publicly.
 
 ## 🚀 Basic Usage
 
-0. Launch the application [(installation)](#installation-guide).
+0. Launch the application [(installation)](#installation-guide). `--debug` to utilize test data.
 1. Log in or register a user.
 2. Create habits, or subscribe to one in the public list.
 3. Mark habits as completed.
@@ -42,6 +42,8 @@ Each habit is linked to user-specific progress, and optionally shared publicly.
 
 ## ✨ Features
 
+> As the task is to create a prototype, the project a written in a very extensible and modular way, reducing coupling of objects and references.
+
 - Structured GUI using `Tkinter` incl. screen base class & popup widgets.
 - Split habit data and habit subscription structure.
   - Easily support public habits.
@@ -52,8 +54,19 @@ Each habit is linked to user-specific progress, and optionally shared publicly.
 - Multi-user support
 - Data persistence via SQLite3
 - Database logger
-- Test unit
+- Database test dummy data (`--debug` flag when running script)
+- Test unit (WIP)
 - Package Manager `Poetry` [(poetry docs)](https://python-poetry.org/docs/basic-usage/)
+
+<br>
+
+## Structure
+
+> Rough introduction / documentation on how the project is built.
+
+- General data flow is as follows: `GUI` (incl. widgets) ⇾ Objects (`User`/`HabitData`/`HabitSubscription`) ⇾ `RequestHandler` ⇾ `DBController`
+  - This ensures that the database controller can be replaced somewhat easily without resulting in any of the object classes having to be changed.
+  - The GUI holds a current user object variable which is used by any widgets spawned from the GUI for them to gain access to requests
 
 <br>
 
@@ -147,5 +160,8 @@ Each habit is linked to user-specific progress, and optionally shared publicly.
 > List of currently known issues / bugs. These are low priority problems that may or may not be fixed after phase 2 depending on tutor feedback.
 
 - Editing `Periodicity` on habits via the `EditHabitPopup` doesn't apply
-  - easy fix, but haven't gotten around to it yet.
+  - removed as of now due to indirect complexity.
 - GUI is not very responsive to different screen / window sizes.
+- ~~Habit descriptions aren't really displayed anywhere useful in the GUI.~~
+- Subscriptions can be created with the same habit data, or different habit data with the same habit data name, which can be confusing..
+- UX issue: can only access delete habit functionality via home screen. (thus can only delete if periodicity is relevant)
