@@ -31,10 +31,10 @@ class HomeScreen(ScreenBase):
 
         # Buttons
         self.create_new_btn = ttk.Button(self, text="Create Habit", command=self._create_habit)
-        self.create_new_btn.grid(row=3, column=0, padx=8, pady=18, sticky="w")
+        self.create_new_btn.grid(row=3, column=0, padx=8, pady=18, sticky="we")
 
         self.add_habit_btn = ttk.Button(self, text="Add Habit", command=self.owning_gui.open_screen_publics)
-        self.add_habit_btn.grid(row=3, column=1, padx=8, pady=18, sticky="e")
+        self.add_habit_btn.grid(row=3, column=1, padx=8, pady=18, sticky="we")
 
     def _init_habit_list(self) -> None:
         """Initializes the habit list, should be called on open_screen_event, we need a valid user.

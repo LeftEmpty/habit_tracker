@@ -32,9 +32,8 @@ class ScreenBase(ttk.Frame, ABC):
 
     @abstractmethod
     def on_open_screen_event(self) -> None:
-        """Can be used to fire logic that is requried for the screen
-        is called in base GUI when screen is opened.
-        """
+        """Can be used to fire logic that is requried for the screen is called in base GUI when screen is opened (via e.g. sidebar).
+        Importantly this function is not called during construction, this means the user is likely set in this function."""
         pass
 
     def update_screen_title(self, new_title:str) -> None:
