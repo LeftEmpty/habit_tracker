@@ -88,6 +88,9 @@ class StatsScreen(ScreenBase):
             self.owning_gui.give_input_feedback(InputResponse.EMPTY_FIELDS)
             return
 
+        for widget in self.stats_container.winfo_children():
+            widget.destroy()
+
         if self.cur_screen_state == StatsScreenState.DEFAULT and \
         self.stats_container != None and self.default_container != None:
             self.default_container.grid_forget()
@@ -143,6 +146,9 @@ class StatsScreen(ScreenBase):
         if not self.owning_gui.cur_user:
             return
 
+        for widget in self.default_container.winfo_children():
+            widget.destroy()
+
         best_cur = (0, "No streaks yet.")
         best_max = (0, "No streaks yet.")
 
@@ -177,7 +183,15 @@ class StatsScreen(ScreenBase):
         ttk.Label(self.default_container, style="Sidebar.TLabel", text=f"{self.owning_gui.cur_user.display_name}'s Stats", font=("TkDefaultFont", 14, "bold"))\
             .grid(row=0, column=0, padx=8, pady=12, sticky="w")
 
-        avg_compl_rate:float = round((total_compl_done / total_compl_exp) * 100, 2)
+        if total_compl_done + total_compl_exp == 0:
+            avg_compl_rate:float = 0
+        else:
+            avg_compl_rate:float = round((total_compl_done / total_compl_exp) * 100, 2)
+
+        if not len(self.subs) > 0:
+            ttk.Label(self.default_container, style="Sidebar.TLabel", text="No Habits found, create or add some first.")\
+                .grid(row=1, column=0, padx=8, pady=4, sticky="w")
+            return
 
         ttk.Label(self.default_container, style="Sidebar.TLabel", text=f"Best current Streak: [{best_cur[0]}] for habit [{best_cur[1]}].")\
             .grid(row=1, column=0, padx=8, pady=4, sticky="w")
@@ -198,7 +212,7 @@ class StatsScreen(ScreenBase):
 
     def _open_periodicity_list_popup(self) -> None:
         """Opens popup that contains list of all subs listed/ordered by their periodidicty."""
-        if self.owning_gui and len(self.subs) > 0:
+        if self.owning_gui:
             PeriodicityHabitListPopup(self.owning_gui, self.subs)
 
     def _get_user_subs_list(self) -> list["HabitSubscription"]:

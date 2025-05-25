@@ -310,15 +310,19 @@ class HabitSubscription:
     def on_cancel_subscription(self) -> None:
         """Event that should be called when a user cancels this subscription,
         When the user was the last subscriber to the used habit (data), then also delete that habit (only unofficial)"""
-        # delete habit data and subscription
+        # delete sub and all completions for it
         request.delete_habit_sub(self.id)
-        if (not self.habit_data.b_public) or (self.habit_data.get_subscriber_count() <= 1 and self.habit_data.author_id == self.owner_id):
-            request.delete_habit_data(self.data_id)
-
-        # delete all completions for this sub
         request.delete_all_sub_completions_for_user(self.owner_id, self.id)
 
-        #del self
+        # try delete habit data if possible
+        if self.habit_data.author_id != self.owner_id:
+            print("can't delete habit data because user is not the author.")
+            return
+        elif self.habit_data.b_public and self.habit_data.get_subscriber_count() >= 1:
+            print(f"can't delete habit data because it's public and has still has other subscribers, ({self.habit_data.get_subscriber_count()} subbed users).")
+            return
+
+        request.delete_habit_data(self.data_id)
 
     def check_streak_broken(self) -> None:
         """Checks if current streak is broken, i.e. should be reset and does so when applicable."""

@@ -271,19 +271,19 @@ def db_get_public_habits(conn: Connection = Connection.FILE) -> list:
         cx.commit()
         cx.close()
 
-def db_get_subs_count_for_habit(habit_id:int, conn:Connection=Connection.FILE) -> int:
+def db_get_subs_count_for_habit(habit_data_id:int, conn:Connection=Connection.FILE) -> int:
     """Returns the number of subscriptions for a given habit ID."""
     cx = sqlite3.connect(conn.value)
     try:
         result = cx.execute(
             """
-            SELECT COUNT(*) FROM habit_subscription WHERE habit_id = ?
+            SELECT COUNT(*) FROM habit_subscription WHERE data_id = ?
             """,
-            (habit_id,)
+            (habit_data_id,)
         )
         return result.fetchone()[0]
     except sqlite3.Error as e:
-        log.error("Error getting habits flagged as public")
+        log.error(f"Error getting habits flagged as public: {e}")
         return -1 # error code
     finally:
         cx.commit()

@@ -102,5 +102,6 @@ class HabitData:
         """
         # this ensures that this object is initialized completetly and 'connected' to the db, i.e. ID is valid
         if self.is_registered():
-            return request.get_habit_subs_count(self.id)
+            count = request.get_habit_subs_count(self.id)
+            return count
         return -1
