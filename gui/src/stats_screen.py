@@ -107,17 +107,17 @@ class StatsScreen(ScreenBase):
             .grid(row=0, column=0, padx=8, pady=12, sticky="w")
 
         ttk.Label(self.stats_container, style="Sidebar.TLabel", text=f"Creation date: {self.cur_selected_sub.creation_date.isoformat()}.")\
-            .grid(row=1, column=0, padx=8, pady=6, sticky="w")
+            .grid(row=1, column=0, padx=8, pady=4, sticky="w")
         ttk.Label(self.stats_container, style="Sidebar.TLabel", text=f"Periodicity: {self.cur_selected_sub.periodicity.value}.")\
-            .grid(row=2, column=0, padx=8, pady=6, sticky="w")
+            .grid(row=2, column=0, padx=8, pady=4, sticky="w")
         ttk.Label(self.stats_container, style="Sidebar.TLabel", text=f"Current Streak: {self.cur_selected_sub.cur_streak}.")\
-            .grid(row=3, column=0, padx=8, pady=6, sticky="w")
+            .grid(row=3, column=0, padx=8, pady=4, sticky="w")
         ttk.Label(self.stats_container, style="Sidebar.TLabel", text=f"Highest Streak: {self.cur_selected_sub.max_streak}.")\
-            .grid(row=4, column=0, padx=8, pady=6, sticky="w")
+            .grid(row=4, column=0, padx=8, pady=4, sticky="w")
         ttk.Label(self.stats_container, style="Sidebar.TLabel", text=f"Total Completions: {len(self.cur_selected_sub.get_sub_completions())}.")\
-            .grid(row=5, column=0, padx=8, pady=6, sticky="w")
+            .grid(row=5, column=0, padx=8, pady=4, sticky="w")
         ttk.Label(self.stats_container, style="Sidebar.TLabel", text=f"Completion Rate: [{rate[0]}] out of exepected [{rate[1]}] -> {rate[2]}%.")\
-            .grid(row=6, column=0, padx=8, pady=6, sticky="w")
+            .grid(row=6, column=0, padx=8, pady=4, sticky="w")
 
     def on_open_screen_event(self) -> None:
         # check user and get subs
@@ -151,7 +151,8 @@ class StatsScreen(ScreenBase):
         easiest:tuple[float, str, int] = (0.00, "No habits found.", 0) # success rate, habit data name, expected completions
         hardest:tuple[float, str, int] = (100.00, "No habits found.", 0)
 
-        rates:list[tuple[int, int, float]] = []
+        total_compl_done:int = 0
+        total_compl_exp:int = 0
 
         for s in self.subs:
             # streaks
@@ -170,14 +171,13 @@ class StatsScreen(ScreenBase):
                 easiest = (rate[2], s.habit_data.name, rate[1])
             if rate[2] < hardest[0] or (rate[2] == hardest[0] and rate[1] > hardest[2]):
                 hardest = (rate[2], s.habit_data.name, rate[1])
-            rates.append(rate)
+            total_compl_done += rate[0]
+            total_compl_exp += rate[1]
 
         ttk.Label(self.default_container, style="Sidebar.TLabel", text=f"{self.owning_gui.cur_user.display_name}'s Stats", font=("TkDefaultFont", 14, "bold"))\
             .grid(row=0, column=0, padx=8, pady=12, sticky="w")
 
-        avg_compl_rate:float = round(sum(rates[2]) / len(rates), 2) if rates else 0.0
-        total_compl_done:int = int(sum(rates[0]) if rates else 0)
-        total_compl_exp:int = int(sum(rates[1]) if rates else 0)
+        avg_compl_rate:float = round((total_compl_done / total_compl_exp) * 100, 2)
 
         ttk.Label(self.default_container, style="Sidebar.TLabel", text=f"Best current Streak: [{best_cur[0]}] for habit [{best_cur[1]}].")\
             .grid(row=1, column=0, padx=8, pady=4, sticky="w")
