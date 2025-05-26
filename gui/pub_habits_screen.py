@@ -1,15 +1,15 @@
 import tkinter as tk
 from tkinter import ttk
-from gui.src.screen import ScreenBase
-from gui.util.gui_enums import HabitQueryCondition, HabitListMode
-from gui.util.widgets import HabitSubListWidget, HabitCreationPopup
+from gui.screen import ScreenBase
+from gui.util.gui_enums import HabitListMode
+from gui.widgets import HabitSubListWidget
 
 # forward declaring for better type checking / overview
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from gui.src.gui import GUI
-    from obj.src.habit import HabitData
-    from obj.src.subscription import Periodicity
+    from gui.gui import GUI
+    from obj.habit import HabitData
+    from obj.subscription import Periodicity
 
 class PublicHabitsScreen(ScreenBase):
     def __init__(self, root:ttk.Frame, gui:"GUI"):

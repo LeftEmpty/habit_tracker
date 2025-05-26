@@ -7,13 +7,13 @@ from typing import Callable
 from gui.util.gui_enums import InputResponse, GUITheme
 from gui.util.gui_themes import ThemeManager
 
-from gui.src.screen import ScreenBase
-from gui.src.front_screen import FrontScreen
-from gui.src.home_screen import HomeScreen
-from gui.src.stats_screen import StatsScreen
-from gui.src.pub_habits_screen import PublicHabitsScreen
+from gui.screen import ScreenBase
+from gui.front_screen import FrontScreen
+from gui.home_screen import HomeScreen
+from gui.stats_screen import StatsScreen
+from gui.pub_habits_screen import PublicHabitsScreen
 
-from obj.src.user import User
+from obj.user import User
 
 
 class GUI:

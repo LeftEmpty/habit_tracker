@@ -1,6 +1,6 @@
-from gui.src.gui import GUI
-import db.src.controller as dbc
-import db.util.populate_debug_data as pdd
+from gui.gui import GUI
+import db.controller as dbc
+import db.populate_debug_data as pdd
 # import atexit
 import argparse
 

@@ -1,14 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
-from gui.src.screen import ScreenBase
+from gui.screen import ScreenBase
 from gui.util.gui_enums import HabitQueryCondition, HabitListMode
-from gui.util.widgets import HabitSubListWidget, HabitCreationPopup
+from gui.widgets import HabitSubListWidget, HabitCreationPopup
 
 # forward declaring for better type checking / overview
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from gui.src.gui import GUI
-    from obj.src.subscription import HabitSubscription
+    from gui.gui import GUI
+    from obj.subscription import HabitSubscription
 
 class HomeScreen(ScreenBase):
     def __init__(self, root:ttk.Frame, gui:"GUI"):

@@ -1,17 +1,17 @@
 import tkinter as tk
 from tkinter import ttk
 from datetime import date
-from gui.src.screen import ScreenBase
+from gui.screen import ScreenBase
 from gui.util.gui_enums import HabitQueryCondition, HabitListMode, InputResponse
-from gui.util.widgets import PeriodicityHabitListPopup
-from obj.src.subscription import HabitSubscription
+from gui.widgets import PeriodicityHabitListPopup
+from obj.subscription import HabitSubscription
 from enum import Enum
 
 # forward declaring for better type checking / overview
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from gui.src.gui import GUI
-    from obj.src.habit import HabitData
+    from gui.gui import GUI
+    from obj.habit import HabitData
 
 
 class StatsScreenState(Enum):

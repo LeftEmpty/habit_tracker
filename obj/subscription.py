@@ -2,12 +2,12 @@ from datetime import datetime, date, timedelta
 from dataclasses import dataclass
 from enum import Enum
 
-import obj.util.request_handler as request
+import obj.request_handler as request
 
 # forward declaring for better overview
 from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
-    from obj.src.habit import HabitData
+    from obj.habit import HabitData
 
 
 class Periodicity(Enum):
@@ -314,13 +314,20 @@ class HabitSubscription:
         request.delete_habit_sub(self.id)
         request.delete_all_sub_completions_for_user(self.owner_id, self.id)
 
-        # try delete habit data if possible
+        sub_count:int = self.habit_data.get_subscriber_count()
+
+        # check habit data deletion rules
         if self.habit_data.author_id != self.owner_id:
-            print("can't delete habit data because user is not the author.")
-            return
-        elif self.habit_data.b_public and self.habit_data.get_subscriber_count() >= 1:
-            print(f"can't delete habit data because it's public and has still has other subscribers, ({self.habit_data.get_subscriber_count()} subbed users).")
-            return
+            if sub_count > 0:
+                print("can't delete habit data because user is not the author and habit is still subscribed to by someone else.")
+                return
+            else:
+                print("deleting habit data, author has unsubbed. current user is last subscriber.")
+        else:
+            if self.habit_data.b_public and sub_count > 0:
+                print(f"can't delete habit data, we're author but it's public and still has other subscribers, ('{sub_count}' subbed users).")
+                # @TODO - could rename habt data author_name to something like "[delted]".
+                return
 
         request.delete_habit_data(self.data_id)
 

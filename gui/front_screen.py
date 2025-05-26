@@ -3,13 +3,13 @@ from tkinter import ttk
 from enum import Enum
 
 from gui.util.gui_enums import InputResponse
-from gui.src.screen import ScreenBase
-import obj.util.request_handler as request
+from gui.screen import ScreenBase
+import obj.request_handler as request
 
 # forward declaring for better type checking / overview
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from gui.src.gui import GUI
+    from gui.gui import GUI
 
 
 class FrontScreenState(Enum):

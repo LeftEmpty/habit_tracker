@@ -1,7 +1,7 @@
-from obj.src.habit import HabitData
-from obj.src.subscription import HabitSubscription
+from obj.habit import HabitData
+from obj.subscription import HabitSubscription
 from gui.util.gui_enums import HabitQueryCondition
-import obj.util.request_handler as request
+import obj.request_handler as request
 
 from datetime import date, timedelta
 

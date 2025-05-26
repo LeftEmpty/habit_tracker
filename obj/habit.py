@@ -1,11 +1,11 @@
 from datetime import date, timedelta
 
-import obj.util.request_handler as request
+import obj.request_handler as request
 
 # forward declaring for better overview
 from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
-    from obj.src.user import User
+    from obj.user import User
 
 
 class HabitData:

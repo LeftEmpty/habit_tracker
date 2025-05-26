@@ -2,8 +2,8 @@ import random
 import hashlib
 from datetime import date, datetime, timedelta
 
-import obj.src.subscription as sub
-import db.src.controller as dbc
+import obj.subscription as sub
+import db.controller as dbc
 
 
 def populate_all() -> None:

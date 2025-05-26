@@ -1,7 +1,7 @@
-import db.src.controller as dbc
+import db.controller as dbc
 import gui.util.validators as validator # validate_input_login, validate_input_register
 from gui.util.gui_enums import InputResponse
-from obj.src.subscription import HabitSubscription, Completion
+from obj.subscription import HabitSubscription, Completion
 
 import hashlib
 from datetime import datetime, date
@@ -9,9 +9,9 @@ from datetime import datetime, date
 # forward declaring for better type checking / overview
 from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
-    from gui.src.gui import GUI
-    from obj.src.user import User
-    from obj.src.habit import HabitData
+    from gui.gui import GUI
+    from obj.user import User
+    from obj.habit import HabitData
 
 
 #* **************************************** login / register ****************************************
@@ -45,7 +45,7 @@ def try_login_user(try_usr:str, try_pw:str, gui:"GUI") -> InputResponse:
         return InputResponse.USR_NOTFOUND
 
     # local import to avoid circular import # @TODO i dont like it
-    from obj.src.user import User
+    from obj.user import User
     user = User(
         user_id=result[0][0],
         display_name=result[0][1],
@@ -150,7 +150,7 @@ def get_habit_data(data_id:int) -> Optional["HabitData"]:
     if len(result) <= 0: return None
 
     # local import to avoid circular import # @TODO i dont like it
-    from obj.src.habit import HabitData
+    from obj.habit import HabitData
     return HabitData(
         name=result[0][1],
         desc=result[0][2],
@@ -163,7 +163,7 @@ def get_habit_data(data_id:int) -> Optional["HabitData"]:
 
 def get_all_public_habits() -> list["HabitData"]:
     result = dbc.db_get_public_habits()
-    from obj.src.habit import HabitData
+    from obj.habit import HabitData
     habits:list[HabitData] = []
     for r in result:
         habits.append(HabitData(

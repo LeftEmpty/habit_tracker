@@ -5,7 +5,7 @@ from enum import Enum
 sys.path.append(os.path.abspath("."))
 
 from db.util.logger import log
-from db.src.table_definitions import get_all_table_defs
+from db.table_definitions import get_all_table_defs
 
 
 class Connection(Enum):

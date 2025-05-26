@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 # forward declaring for better type checking / overview
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from gui.src.gui import GUI
+    from gui.gui import GUI
 
 
 class ScreenBase(ttk.Frame, ABC):

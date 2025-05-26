@@ -3,14 +3,14 @@ from tkinter import ttk
 from typing import Optional, Callable, Dict
 
 from gui.util.gui_enums import InputResponse, HabitListMode, HabitQueryCondition
-from obj.src.habit import HabitData
-from obj.src.subscription import HabitSubscription, Periodicity
+from obj.habit import HabitData
+from obj.subscription import HabitSubscription, Periodicity
 
 # forward declaring for better type checking / overview
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from gui.src.gui import GUI
-    from obj.src.user import User
+    from gui.gui import GUI
+    from obj.user import User
 
 
 class ScrollableFrame(ttk.Frame):
