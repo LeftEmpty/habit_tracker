@@ -91,10 +91,18 @@ def try_register_user(try_email:str, try_usr:str, try_pw:str, try_pw2:str) -> In
 
 
 #* **************************************** user ****************************************
-def get_user_displayname(user_id:int) -> str:
-    result = dbc.db_get_user_by_id(user_id)
-    if result[0][0]:
-        return result[0][0]
+def get_user_displayname(user_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> str:
+    """Returns the display name of a user.
+
+    Args:
+        user_id (int): ID of the user to be querried.
+
+    Returns:
+        str: returns the display name of the user to be querried. returns emptry on failure.
+    """
+    result = dbc.db_get_user_by_id(user_id, conn)
+    if result[0][0] and result[0][1]:
+        return result[0][1]
     return ""
 
 
@@ -113,7 +121,7 @@ def create_new_habit_via_data(owning_user:"User", habit_name:str, habit_desc:str
 
         return None
 
-def create_new_habit_via_obj(data:"HabitData") -> int:
+def create_new_habit_via_obj(data:"HabitData", conn:dbc.Connection=dbc.Connection.FILE) -> int:
     """_summary_
 
     Args:
@@ -130,12 +138,13 @@ def create_new_habit_via_obj(data:"HabitData") -> int:
         b_public=data.b_public,
         b_official=data.b_official,
         #last_modified=str(date.today())
+        conn=conn
     )
 
-def modify_habit_data(habit:"HabitData") -> None:
+def modify_habit_data(habit:"HabitData", conn:dbc.Connection=dbc.Connection.FILE) -> None:
     dbc.db_modify_habit_data(habit.id, habit.name, habit.desc, habit.b_public, str(habit.last_modified))
 
-def get_habit_data(data_id:int) -> Optional["HabitData"]:
+def get_habit_data(data_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> Optional["HabitData"]:
     """_summary_
 
     Args:
@@ -146,7 +155,7 @@ def get_habit_data(data_id:int) -> Optional["HabitData"]:
     """
     if data_id < 0: return None
 
-    result = dbc.db_get_habit_data_by_id(data_id)
+    result = dbc.db_get_habit_data_by_id(data_id, conn=conn)
     if len(result) <= 0: return None
 
     # local import to avoid circular import # @TODO i dont like it
@@ -185,7 +194,7 @@ def delete_habit_data_entry(habit_data_id:int) -> bool:
 
 
 #* **************************************** subscriptions ****************************************
-def create_new_sub_for_user(user_id:int, sub:HabitSubscription) -> int:
+def create_new_sub_for_user(user_id:int, sub:HabitSubscription, conn:dbc.Connection=dbc.Connection.FILE) -> int:
     """Creates a database entry for the provided habit subscription and returns its ID.
 
     Args:
@@ -201,15 +210,16 @@ def create_new_sub_for_user(user_id:int, sub:HabitSubscription) -> int:
         None,
         sub.periodicity.value,
         sub.cur_streak,
-        sub.max_streak
+        sub.max_streak,
+        conn=conn
     )
     return id
 
-def delete_habit_sub(sub_id:int) -> bool:
-    return dbc.db_delete_habit_sub(sub_id)
+def delete_habit_sub(sub_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> bool:
+    return dbc.db_delete_habit_sub(sub_id, conn=conn)
 
-def delete_habit_data(data_id:int) -> bool:
-    return dbc.db_delete_habit_data(data_id)
+def delete_habit_data(data_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> bool:
+    return dbc.db_delete_habit_data(data_id, conn=conn)
 
 #! DEPRECATED
 #def modify_sub_periodicity(sub_id:int, new_periodicity:str) -> bool:
@@ -237,7 +247,7 @@ def update_sub_entry(sub:HabitSubscription) -> bool:
     )
     return False
 
-def get_subs_for_user(user_id:int, user_displayname:str="") -> list[HabitSubscription]:
+def get_subs_for_user(user_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> list[HabitSubscription]:
     """Uses dbc to query a habit subscription according to condition,
     then convert the resulting list into a list of HabitSubscription objects.
 
@@ -249,7 +259,7 @@ def get_subs_for_user(user_id:int, user_displayname:str="") -> list[HabitSubscri
         list[HabitSubscription]: All subs that meet the requirements
     """
     # query db
-    results = dbc.db_get_subs_for_user(user_id)
+    results = dbc.db_get_subs_for_user(user_id, conn)
     if len(results) <= 0: return []
 
     # format query results
@@ -271,7 +281,7 @@ def get_subs_for_user(user_id:int, user_displayname:str="") -> list[HabitSubscri
     return subs
 
 #* **************************************** completions ****************************************
-def create_completion(completion:Completion) -> bool:
+def create_completion(completion:Completion, conn:dbc.Connection=dbc.Connection.FILE) -> bool:
     """Format completion's date and try to create a DB enry.
 
     Args:
@@ -281,7 +291,7 @@ def create_completion(completion:Completion) -> bool:
         bool: success / failure
     """
     date_str = completion.compl_date.isoformat()
-    return dbc.db_create_completion(date_str, completion.user_id, completion.habit_sub_id)
+    return dbc.db_create_completion(date_str, completion.user_id, completion.habit_sub_id, conn=conn)
 
 
 
@@ -313,7 +323,7 @@ def get_latest_sub_completion_for_user(user_id:int, sub_id:int) -> Optional[Comp
     )
     return c
 
-def get_all_sub_completions_for_user(user_id:int, sub_id:int) -> list[Completion]:
+def get_all_sub_completions_for_user(user_id:int, sub_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> list[Completion]:
     """Gets all completions that match user and sub IDs,
     then creates completion objects and return the elist.
 
@@ -324,7 +334,7 @@ def get_all_sub_completions_for_user(user_id:int, sub_id:int) -> list[Completion
     Returns:
         list[Completion]: list of all completions that match the IDs, ERROR: list may be empty!
     """
-    result = dbc.db_get_all_sub_completions_for_user(user_id, sub_id)
+    result = dbc.db_get_all_sub_completions_for_user(user_id, sub_id, conn=conn)
     if not len(result) > 0:
         return []
     completions:list[Completion] = []

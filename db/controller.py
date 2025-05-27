@@ -188,6 +188,7 @@ def db_delete_habit_data(data_id:int, conn:Connection=Connection.FILE) -> bool:
             """,
             (data_id,)
         )
+        return True
     except sqlite3.Error as e:
         log.error(f"Error deleting habit with ID of {data_id}: {e}")
         return False
@@ -197,7 +198,7 @@ def db_delete_habit_data(data_id:int, conn:Connection=Connection.FILE) -> bool:
         if cu.rowcount == 0:
             return False
         else:
-            log.info("Habit deleted successfully")
+            log.info(f"Habit with ID of {data_id} deleted successfully")
             return True
 
 def db_modify_habit_data(data_id:int, new_name:str, new_description:str, public:bool, last_modified:str, conn:Connection=Connection.FILE) -> bool:
@@ -320,14 +321,14 @@ def db_create_habit_sub(owner_user_id:int, habit_data_id:int, creation_date:str,
 
 def db_delete_habit_sub(sub_id:int, conn:Connection=Connection.FILE) -> bool:
     cx = sqlite3.connect(conn.value)
+    cu = cx.cursor()
     try:
-        result = cx.execute(
+        cu = cx.execute(
             """
             DELETE FROM habit_subscription WHERE habit_sub_id  = ?
             """,
             (sub_id,)
         )
-        log.info(f"Subscription deleted successfully, ID: {sub_id}")
         return True
     except sqlite3.Error as e:
         log.error(f"Error deleting subscription with ID of {sub_id}: {e}")
@@ -335,6 +336,11 @@ def db_delete_habit_sub(sub_id:int, conn:Connection=Connection.FILE) -> bool:
     finally:
         cx.commit()
         cx.close()
+        if cu.rowcount == 0:
+            return False
+        else:
+            log.info(f"Subscription deleted successfully, ID: {sub_id}")
+            return True
 
 def db_modifiy_sub_periodicty(sub_id:int, periodicity:str, conn:Connection=Connection.FILE) -> bool:
     cx = sqlite3.connect(conn.value)
