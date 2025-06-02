@@ -65,6 +65,7 @@ class User:
         return result
 
     def update_subscribed_habits(self) -> None:
+        """Simply gets an updated list of all subscribed habits via a DB query."""
         self.habit_subs = self.get_subscribed_habits(HabitQueryCondition.ALL)
 
     def get_all_non_subbed_public_habits(self) -> list[HabitData]:

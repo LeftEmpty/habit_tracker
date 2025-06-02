@@ -44,7 +44,7 @@ def try_login_user(try_usr:str, try_pw:str, gui:"GUI") -> InputResponse:
     if len(result) <= 0:
         return InputResponse.USR_NOTFOUND
 
-    # local import to avoid circular import # @TODO i dont like it
+    # local import to avoid circular import
     from obj.user import User
     user = User(
         user_id=result[0][0],
@@ -108,24 +108,25 @@ def get_user_displayname(user_id:int, conn:dbc.Connection=dbc.Connection.FILE) -
 
 #* **************************************** habit ****************************************
 def create_new_habit_via_data(owning_user:"User", habit_name:str, habit_desc:str, start_date:date, b_public:bool) -> Optional["HabitData"]:
-        """Validates data and then calls dbc to create a habit
-
-        Args:
-            habit_name (str): name of habit to create
-            habit_desc (str): description of habit to create
-            b_public (bool): whether or not the habit should be public
-
-        Returns:
-            int: ID of the created habit data entry
-        """
-
-        return None
-
-def create_new_habit_via_obj(data:"HabitData", conn:dbc.Connection=dbc.Connection.FILE) -> int:
-    """_summary_
+    """Validates data and then calls dbc to create a habit
 
     Args:
-        data (HabitData): _description_
+        habit_name (str): name of habit to create
+        habit_desc (str): description of habit to create
+        b_public (bool): whether or not the habit should be public
+
+    Returns:
+        int: ID of the created habit data entry
+    """
+
+    return None
+
+def create_new_habit_via_obj(data:"HabitData", conn:dbc.Connection=dbc.Connection.FILE) -> int:
+    """Enters the habit_data object into the specified DB.
+    HabitData ID is generated via the db query and returned.
+
+    Args:
+        data (HabitData): HabitData object to be saved to the database.
 
     Returns:
         int: ID of the created habit data entry
@@ -142,16 +143,24 @@ def create_new_habit_via_obj(data:"HabitData", conn:dbc.Connection=dbc.Connectio
     )
 
 def modify_habit_data(habit:"HabitData", conn:dbc.Connection=dbc.Connection.FILE) -> None:
+    """Updates/Modifies the habit data's database entry. Simple DB query. Entry is specified via passed data object.
+
+    Args:
+        habit (HabitData): HabitData object, all data is pulled from this.
+        conn (dbc.Connection, optional): Connection to be used for the query. Defaults to dbc.Connection.FILE.
+    """
+    if habit.id <= 0:
+        return
     dbc.db_modify_habit_data(habit.id, habit.name, habit.desc, habit.b_public, str(habit.last_modified))
 
 def get_habit_data(data_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> Optional["HabitData"]:
-    """_summary_
+    """Simple query to get a habit data entry. Returns a HabitData Object, may be None.
 
     Args:
-        data_id (int): _description_
+        data_id (int): data_id to query for.
 
     Returns:
-        Optional[HabitData]: _description_
+        Optional[HabitData]: HabitData Object that was querried, may be None
     """
     if data_id < 0: return None
 
@@ -171,6 +180,12 @@ def get_habit_data(data_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> Opti
     )
 
 def get_all_public_habits() -> list["HabitData"]:
+    """Querries Database to get all entries with b_public set to TRUE,
+    then creates HabitData objects and returns the list, can be empty.
+
+    Returns:
+        list (HabitData): List of public HabitData objects, can be empty.
+    """
     result = dbc.db_get_public_habits()
     from obj.habit import HabitData
     habits:list[HabitData] = []
@@ -187,11 +202,39 @@ def get_all_public_habits() -> list["HabitData"]:
     return habits
 
 def get_habit_subs_count(habit_data_id:int) -> int:
+    """Returns the number/count of entries in the habit_data table that match the ID.
+
+    Args:
+        habit_data_id (int): ID of habit data to match entries with.
+
+    Returns:
+        int: count/number of subs (entries in table).
+    """
     return dbc.db_get_subs_count_for_habit(habit_data_id)
 
+# One of these is redundant, flagged one as DEPRECATED, gradually stop usage through updates
 def delete_habit_data_entry(habit_data_id:int) -> bool:
+    """@DEPRECATED
+    Deletes HabitData object's database entry. Simple DB query.
+
+    Args:
+        habit_data_id (int): ID to match the entry with.
+
+    Returns:
+        bool: success / failure.
+    """
     return dbc.db_delete_habit_data(habit_data_id)
 
+def delete_habit_data(data_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> bool:
+    """Deletes HabitData object's database entry. Simple DB query.
+
+    Args:
+        habit_data_id (int): ID to match the entry with.
+
+    Returns:
+        bool: success / failure.
+    """
+    return dbc.db_delete_habit_data(data_id, conn=conn)
 
 #* **************************************** subscriptions ****************************************
 def create_new_sub_for_user(user_id:int, sub:HabitSubscription, conn:dbc.Connection=dbc.Connection.FILE) -> int:
@@ -217,9 +260,6 @@ def create_new_sub_for_user(user_id:int, sub:HabitSubscription, conn:dbc.Connect
 
 def delete_habit_sub(sub_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> bool:
     return dbc.db_delete_habit_sub(sub_id, conn=conn)
-
-def delete_habit_data(data_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> bool:
-    return dbc.db_delete_habit_data(data_id, conn=conn)
 
 #! DEPRECATED
 #def modify_sub_periodicity(sub_id:int, new_periodicity:str) -> bool:
@@ -292,8 +332,6 @@ def create_completion(completion:Completion, conn:dbc.Connection=dbc.Connection.
     """
     date_str = completion.compl_date.isoformat()
     return dbc.db_create_completion(date_str, completion.user_id, completion.habit_sub_id, conn=conn)
-
-
 
 def delete_completion(user_id:int, sub_id:int, date:date) -> bool:
     """deletes a completion based on the date.

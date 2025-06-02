@@ -146,6 +146,20 @@ class HabitSubscription:
         return self.id is not None and self.id >= 0
 
     def _normalize_periodicity(self, value: str | Periodicity) -> Periodicity:
+        """Normalize a periodicity, i.e. can take a periodicity OR string and return a periodicity enum.
+
+        @TODO This should arguably be a global helper function instead of being in this class.
+
+        Args:
+            value (str | Periodicity): periodicity to normalize, may be a string or enum.
+
+        Raises:
+            ValueError: Invalid periodicity string, string is not part of Enum.
+            TypeError: Expected str or Periodicity, value input has wrong Type.
+
+        Returns:
+            Periodicity: Enum variable associated with the value input.
+        """
         if isinstance(value, Periodicity):
             return value
         elif isinstance(value, str):
@@ -158,6 +172,14 @@ class HabitSubscription:
             raise TypeError(f"Expected str or Periodicity, got {type(value)}")
 
     def _normalize_date(self, d:date|str) -> date|None:
+        """Simplified date normalization. Returns date object matching the input value.
+
+        Args:
+            d (date | str): Input value, may be string or date object.
+
+        Returns:
+            date|None: date variable associated with the input. May Return None.
+        """
         if isinstance(d, date):
             return d
         if d == "":

@@ -41,6 +41,13 @@ class HabitData:
         return self.id is not None and self.id >= 0
 
     def modify_data(self, new_name:str, new_desc:str, b_public:bool) -> None:
+        """Updates data by modifying it locally and then requesting the change to be applied in DB.
+
+        Args:
+            new_name (str): new name for this object
+            new_desc (str): new desc for this object
+            b_public (bool): new public setting for this object
+        """
         self.name = new_name
         self.desc = new_desc
         self.b_public = b_public
