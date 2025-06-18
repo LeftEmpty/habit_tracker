@@ -342,7 +342,34 @@ def db_delete_habit_sub(sub_id:int, conn:Connection=Connection.FILE) -> bool:
             log.info(f"Subscription deleted successfully, ID: {sub_id}")
             return True
 
+def db_get_habit_sub_by_id(sub_id:int, conn:Connection=Connection.FILE) -> list:
+    """Returns a standard, unformated list object according to sqlite3 query.
+
+    Args:
+        sub_id (int): id of the sub to query
+        conn (Connection, optional): can specify db, used for testing. Defaults to Connection.FILE.
+
+    Returns:
+        list: unformated query result
+    """
+    cx = sqlite3.connect(conn.value)
+    try:
+        result = cx.execute(
+            """
+            SELECT * FROM habit_subscription WHERE habit_sub_id = ?
+            """,
+            str(sub_id)
+        )
+        return result.fetchall()
+    except sqlite3.Error as e:
+        log.error(f"Error getting subscriptions with ID of {sub_id}: {e}")
+        return []
+    finally:
+        cx.commit()
+        cx.close()
+
 def db_modifiy_sub_periodicty(sub_id:int, periodicity:str, conn:Connection=Connection.FILE) -> bool:
+    """ # @DEPRECATED - don't use this anymore """
     cx = sqlite3.connect(conn.value)
     try:
         result = cx.execute(
@@ -358,20 +385,6 @@ def db_modifiy_sub_periodicty(sub_id:int, periodicity:str, conn:Connection=Conne
     finally:
         cx.commit()
         cx.close()
-
-# HabitSubscription: str = """
-#     CREATE TABLE IF NOT EXISTS habit_subscription (
-#         habit_sub_id INTEGER PRIMARY KEY AUTOINCREMENT,
-#         user_id INTEGER NOT NULL,
-#         data_id INTEGER NOT NULL,
-#         periodicity TEXT NOT NULL,
-#         cur_streak INTEGER NOT NULL,
-#         max_streak INTEGER NOT NULL,
-#         creation_date TEXT NOT NULL,
-#         latest_date TEXT,
-#         FOREIGN KEY(user_id) REFERENCES User(user_id) ON DELETE CASCADE,
-#         FOREIGN KEY(data_id) REFERENCES HabitData(habit_data_id)
-#     )"""
 
 def db_modifiy_sub(sub_id:int, periodicity:str, cur_streak:int, max_streak:int, latest_date:str, conn:Connection=Connection.FILE) -> bool:
     cx = sqlite3.connect(conn.value)
@@ -423,16 +436,6 @@ def db_get_subs_for_user(user_id:int, conn:Connection=Connection.FILE) -> list:
     finally:
         cx.commit()
         cx.close()
-
-#* ********************************************* COMPLETIONS *********************************************
-# Completions: str = """
-#     CREATE TABLE IF NOT EXISTS completion (
-#         date TEXT NOT NULL,
-#         user_id INTEGER NOT NULL,
-#         habit_sub_id INTEGER NOT NULL,
-#         FOREIGN KEY(user_id) REFERENCES User(user_id),
-#         FOREIGN KEY(habit_sub_id) REFERENCES HabitSubscription(habit_sub_id)
-#     )"""
 
 def db_create_completion(date:str, user_id:int, habit_sub_id:int, conn:Connection=Connection.FILE) -> bool:
     """Create a completion for a subscription.
