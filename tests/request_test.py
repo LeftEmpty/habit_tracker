@@ -64,9 +64,11 @@ class TestHabitDataRequests(unittest.TestCase):
 
     def test_create_and_get_habit_data(self) -> None:
         test_data = data.HabitData(
+            habit_id=999,
             name="VeryUniqueNameToIdThisHabit",
             desc="TestDesc",
-            author_id=1
+            author_id=1,
+            author_name="Tester"
         )
         habit_id = request.create_new_habit_via_obj(test_data, conn=file)
         result:data.HabitData|None = request.get_habit_data(habit_id, conn=file)
@@ -80,9 +82,11 @@ class TestHabitDataRequests(unittest.TestCase):
 
     def test_delete_habit_data(self) -> None:
         test_data = data.HabitData(
+            habit_id=998,
             name="TestName",
             desc="TestDesc",
-            author_id=1
+            author_id=1,
+            author_name="Tester"
         )
         habit_id = request.create_new_habit_via_obj(test_data, conn=file)
         result = request.delete_habit_data(habit_id, conn=file)

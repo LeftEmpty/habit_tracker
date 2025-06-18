@@ -313,7 +313,8 @@ def get_subs_for_user(user_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> l
             max_streak=r[5],
             creation_date=r[6],
             last_completed_date=r[7],
-            sub_id=r[0]
+            sub_id=r[0],
+            habit_data=get_habit_data(r[0], conn=conn)
         )
         if sub:
             subs.append(sub)
@@ -350,8 +351,8 @@ def delete_completion(user_id:int, sub_id:int, date:date) -> bool:
 def delete_all_sub_completions_for_user(user_id:int, sub_id:int) -> bool:
     return dbc.db_delete_completion(user_id, sub_id, b_all=True)
 
-def get_latest_sub_completion_for_user(user_id:int, sub_id:int) -> Optional[Completion]:
-    result = dbc.db_get_latest_sub_completion_for_user(user_id, sub_id)
+def get_latest_sub_completion_for_user(user_id:int, sub_id:int, conn:dbc.Connection=dbc.Connection.FILE) -> Optional[Completion]:
+    result = dbc.db_get_latest_sub_completion_for_user(user_id, sub_id, conn)
     if not len(result) > 0:
         return None
     c = Completion(

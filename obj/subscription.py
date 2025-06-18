@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 import obj.request_handler as request
+from db.controller import Connection
 
 # forward declaring for better overview
 from typing import Optional, TYPE_CHECKING
@@ -205,7 +206,7 @@ class HabitSubscription:
         else:
             self._add_completion_event()
 
-    def get_completed_state(self, completions:list[Completion]=[]) -> bool:
+    def get_completed_state(self, last_completion:Optional[Completion]=None) -> bool:
         """'Algorithm' to figure out if the subscription has been completed.
         Checks if one of this subs completions has a date in the current periodicity timeframe.
 
@@ -216,6 +217,8 @@ class HabitSubscription:
             bool: sub is currently completed.
         """
         latest_compl = request.get_latest_sub_completion_for_user(self.owner_id, self.id)
+        if last_completion != None:
+            latest_compl = last_completion
         if not latest_compl:
             print(f"No completion found for sub with id|habit {self.id}|{self.habit_data.name} from user {self.owner_id}.")
             return False
@@ -274,7 +277,7 @@ class HabitSubscription:
                     self.cur_streak = self.max_streak = 0
                 request.update_sub_entry(self)
 
-    def get_sub_completions(self, b_all:bool=True, start_date:date=date.today(), end_date:date=date.today()) -> list[Completion]:
+    def get_sub_completions(self, b_all:bool=True, start_date:date=date.today(), end_date:date=date.today(), b_test:bool=False) -> list[Completion]:
         """Get all completions for this subscription (and it's owning user).
         Toggable by bool to specify a timeframe via start/end date parameters.
 
@@ -287,7 +290,8 @@ class HabitSubscription:
             list[Completion]: list of all completions.
         """
         if b_all:
-            completions = request.get_all_sub_completions_for_user(self.owner_id, self.id)
+            completions = request.get_all_sub_completions_for_user(self.owner_id, self.id) if not b_test\
+                        else request.get_all_sub_completions_for_user(self.owner_id, self.id, Connection.TEST)
             if not len(completions) > 0: return []
             else: return completions
         elif not b_all and start_date and end_date and start_date < end_date:
@@ -297,18 +301,22 @@ class HabitSubscription:
         print(f"Error getting sub completions due to improper function usage - check the dates.")
         return []
 
-    def get_completion_rate(self) -> tuple[int, int, float]:
-        """Figures out success/completion rate by how often the sub should have been completed and how many times it actually was.
+    def get_completion_rate(self, b_test:bool=False) -> tuple[int, int, float]:
+        """Figures out success/completion rate by how often the sub should have been completed
+        and how many times it actually was.
+
+        Args:
+            b_test (bool, optional): _description_. Defaults to False.
 
         Returns:
-            float: success rate as a percentage between 0 - 100
+            tuple[int, int, float]: (done, expected, percentage)
         """
         start_date:date = self.creation_date
         end_date:date = date.today()
         delta_days = (end_date - start_date).days + 1  # include today
 
         # Get completions
-        completions = self.get_sub_completions()
+        completions = self.get_sub_completions(b_test=b_test)
         actual_count = len(completions)
 
         # Calculate expected completions
@@ -353,30 +361,42 @@ class HabitSubscription:
 
         request.delete_habit_data(self.data_id)
 
-    def check_streak_broken(self) -> None:
-        """Checks if current streak is broken, i.e. should be reset and does so when applicable."""
+    def check_streak_broken(self, b_test:bool=False) -> bool:
+        """Checks if current streak is broken, i.e. should be reset and does so when applicable.
+
+        Args:
+            b_test (bool, optional): Only used (i.e. set to True) when unit testing. Defaults to False.
+
+        Returns:
+            bool: True if broken, False if still 'intact'
+        """
         today = date.today()
         expected_latest:date
+
         if not self.last_completed_date:
             if self.cur_streak != 0:
                 self.cur_streak = 0
-                request.update_sub_entry(self)
-                return
+                if not b_test: request.update_sub_entry(self)
+                return True
+
         else:
+            # DAILY - Broken if last completed more than 1 day ago
             if self.periodicity == Periodicity.DAILY:
-                # DAILY - Broken if last completed more than 1 day ago
                 expected_latest:date = today - timedelta(days=1)
+            # WEEKLY - Broken if last completed 2 weeks ago (i.e. last week + currently started week)
             elif self.periodicity == Periodicity.WEEKLY:
-                # WEEKLY - Broken if last completed 2 weeks ago (i.e. last week + currently started week)
                 expected_latest = today - timedelta(days=7 + today.weekday())
+            # WEEKDAY - Broken if last completed longer than last weekday ago (i.e. 8)
             else:
-                # WEEKDAY - Broken if last completed longer than last weekday ago (i.e. 8)
                 expected_latest = today - timedelta(days=7)
 
             if self.last_completed_date < expected_latest:
-                print(f"Streak broken on sub [id:{self.id}|({self.habit_data.name})]")
+                if not b_test: print(f"Streak broken on sub [id:{self.id}|({self.habit_data.name})]")
                 self.cur_streak = 0
-                request.update_sub_entry(self)
+                if not b_test: request.update_sub_entry(self)
+                return True
+
+        return False
 
     def modify_sub(self, periodicity:Periodicity|str) -> None:
         """Modifies this subs data & modifies entry in db"""
