@@ -4,7 +4,7 @@
 
 A Python-based Habit Tracking App built using basic `Python`, `sqlite3`, `Tkinter`.
 
-<!-- Final Grade: *@tbd* -->
+Final Grade: *100%* 
 
 </br>
 
